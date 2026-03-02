@@ -13,7 +13,7 @@ type user struct {
 	ID	string `json:"id"`
 	Name  string `json:"name"`
 	Email string `json:"email"`
-	FollowedChannelsById []string `json:"followed_channels_by_id"`
+	FollowedChannelsByID []string `json:"followed_channels_by_id"`
 }
 
 type channel struct {
@@ -23,30 +23,50 @@ type channel struct {
 	Description string `json:"description"`
 }
 
+type createUserInput struct {
+	// binding adalah tag yang digunakan untuk menentukan aturan validasi pada field struct saat melakukan binding data dari request body. Dalam kasus ini, kita menggunakan binding:"required" untuk menandai bahwa field Name pada struct createUserInput wajib diisi saat melakukan binding data JSON dari request body. Jika field Name tidak diisi atau kosong, maka proses binding akan gagal dan menghasilkan error. Dengan menggunakan tag binding:"required", kita dapat memastikan bahwa data yang diterima dari request body memiliki field Name yang valid dan tidak kosong sebelum melanjutkan ke proses selanjutnya.
+	Name string `json:"name" binding:"required"`
+	Email string `json:"email" binding :"required"`
+	FollowedChannelsByID []string `json:"followed_channels_by_id"`
+}
+
+type createChannelInput struct {
+	ChannelName  string `json:"channel_name" binding:"required"`
+	ChannelType string `json:"channel_type" binding:"required"`
+	Description string `json:"description"`
+}	
+
+var lastUserID int
+var lastChannelID int
 var userJSON []byte
 var channelJSON []byte
 var users []user
 var channels []channel
 
+
 func main() {
 	var err error
 	userJSON, err = os.ReadFile("data/users.json")
 	channelJSON, err = os.ReadFile("data/channels.json")
-
+	
 	// jika terjadi error saat membaca file users.json, maka program akan panic dan menampilkan pesan error. Hal ini dilakukan untuk memastikan bahwa program tidak melanjutkan eksekusi jika file tidak dapat dibaca, sehingga mencegah terjadinya kesalahan lebih lanjut yang mungkin terjadi akibat data yang tidak tersedia.
 	if err != nil {
 		panic(err)
 	}
-
+	
 	// json.Unmarshal() merupakan fungsi untuk mengkonversi data JSON menjadi struct atau slice dalam bahasa Go. Fungsi ini menerima dua parameter, yaitu data JSON yang akan dikonversi dan variabel yang akan menampung hasil konversi. Dalam kasus ini, kita mengkonversi data JSON yang dibaca dari file users.json menjadi slice of user dan menyimpannya dalam variabel users.
 	json.Unmarshal(userJSON, &users)
 	json.Unmarshal(channelJSON, &channels)
-
+	lastUserID = len(users)
+	lastChannelID = len(channels)
+	
+	
 	router := gin.Default()
 	router.GET("/users", getUser)
 	router.GET("/users/:id", getUserByID)
 	router.POST("/users", addUser)
 	router.GET("/channels", getChannel)
+	router.POST("/channels", addChannel)
 	router.Run("localhost:8080")
 }
 
@@ -54,6 +74,8 @@ func main() {
 func getUser(c *gin.Context) {
 	// c.indentedJSON() merupakan fungsi untuk mengirimkan response dalam format JSON dengan indentasi yang rapi. Fungsi ini menerima dua parameter, yaitu status code HTTP dan data yang akan dikirimkan dalam format JSON. Dalam kasus ini, kita mengirimkan status code http.StatusOK (200) dan data userJSON yang berisi informasi tentang semua user.
 	c.IndentedJSON(http.StatusOK, users)
+	fmt.Println(lastUserID)
+	fmt.Println(lastChannelID)
 
 	// c.Data() merupakan fungsi untuk mengirimkan response dengan format data tertentu. Fungsi ini menerima tiga parameter, yaitu status code HTTP, content type, dan data yang akan dikirimkan. Dalam kasus ini, kita mengirimkan status code http.StatusOK (200), content type "application/json", dan data userJSON yang berisi informasi tentang semua user.
 	// c.Data(http.StatusOK, "application/json", userJSON)
@@ -82,20 +104,77 @@ func getUserByID(c *gin.Context) {
 	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "user not found"})
 }
 
+func generateUserID() string {
+	lastUserID++
+	return fmt.Sprintf("%d", lastUserID)
+}
+func generateChannelID() string {
+	lastChannelID++
+	return fmt.Sprintf("ch_%d", lastChannelID)
+}
+
 func addUser(c *gin.Context) {
-	var newUser user
-	if err := c.BindJSON(&newUser); err != nil {
+	var req createUserInput
+	
+	// var newUser user merupakan deklarasi variabel newUser dengan tipe data user. Variabel ini akan digunakan untuk menyimpan data user baru yang diterima dari request body dalam format JSON.
+	// var newUser user
+	// c.BindJSON() merupakan fungsi untuk mengikat data JSON yang diterima dari request body ke dalam variabel yang telah dideklarasikan. Fungsi ini menerima satu parameter, yaitu pointer ke variabel yang akan menampung data JSON. Dalam kasus ini, kita mengikat data JSON yang diterima dari request body ke dalam variabel newUser. Jika terjadi error saat proses pengikatan, maka kita mengirimkan response dengan status code http.StatusBadRequest (400) dan pesan error yang terjadi.
+	if err := c.BindJSON(&req); err != nil {
+		// c.JSON() merupakan fungsi untuk mengirimkan response dalam format JSON. Fungsi ini menerima dua parameter, yaitu status code HTTP dan data yang akan dikirimkan dalam format JSON. Dalam kasus ini, kita mengirimkan status code http.StatusBadRequest (400) dan data berupa objek JSON yang berisi pesan error yang terjadi saat proses pengikatan data JSON ke dalam variabel newUser.
+		// gin.H merupakan tipe data yang digunakan untuk membuat objek JSON dalam format key-value. Dalam kasus ini, kita membuat objek JSON dengan key "error" dan value berupa pesan error yang terjadi saat proses pengikatan data JSON ke dalam variabel newUser.
+		c.JSON(http.StatusBadRequest, gin.H{
+			// err.Error() merupakan metode untuk mendapatkan pesan error dalam bentuk string dari variabel err yang berisi informasi tentang error yang terjadi saat proses pengikatan data JSON ke dalam variabel newUser. Pesan error ini akan dikirimkan sebagai value dari key "error" dalam objek JSON yang dikirimkan sebagai response.
+			"error": err.Error(),
+		})
+		return
+	}
+
+	newUser := user {
+		ID : generateUserID(),
+		Name: req.Name,
+		Email: req.Email,
+		FollowedChannelsByID: req.FollowedChannelsByID,
+	}
+
+	// kita melakukan iterasi pada slice users untuk memeriksa apakah ada user dengan ID yang sama dengan newUser.ID. Jika ditemukan, maka kita mengirimkan response dengan status code http.StatusConflict (409) dan pesan "user with the same ID already exists". Jika tidak ditemukan, maka kita melanjutkan proses untuk menambahkan data user baru ke dalam slice users. Namun, dalam kasus ini, kita tidak perlu melakukan pengecekan untuk ID yang sama karena ID pada struct user dihasilkan secara otomatis menggunakan fungsi generateUserID(), sehingga tidak mungkin ada dua user dengan ID yang sama. Oleh karena itu, kita dapat langsung menambahkan data user baru ke dalam slice users tanpa perlu melakukan pengecekan untuk ID yang sama.
+	// for _, a := range users {
+	// 	if newUser.ID == a.ID {
+	// 		c.IndentedJSON(http.StatusConflict, gin.H{"message": "user with the same ID already exists"})
+	// 		return
+	// 	}
+	// }
+
+
+	// users = append(users, newUser) merupakan fungsi untuk menambahkan data user baru yang telah diterima dari request body ke dalam slice users. Fungsi append() digunakan untuk menambahkan elemen baru ke dalam slice. Dalam kasus ini, kita menambahkan newUser ke dalam slice users, sehingga data user baru tersebut akan disimpan dalam slice users dan dapat diakses melalui endpoint GET /users. Setelah menambahkan data user baru ke dalam slice users, kita mengirimkan response dengan status code http.StatusCreated (201) dan data user baru yang telah ditambahkan dalam format JSON.
+	users = append(users, newUser)
+	c.IndentedJSON(http.StatusCreated, newUser)
+	// json.MarshalIndent() merupakan fungsi untuk mengkonversi data dalam format struct atau slice menjadi format JSON dengan indentasi yang rapi. Fungsi ini menerima tiga parameter, yaitu data yang akan dikonversi, prefix untuk setiap baris (dalam kasus ini kita menggunakan string kosong), dan indentasi yang digunakan untuk setiap level (dalam kasus ini kita menggunakan dua spasi). Fungsi ini akan mengembalikan data dalam format JSON yang telah diindentasikan dengan rapi. Dalam kasus ini, kita mengkonversi slice users yang telah diperbarui dengan data user baru menjadi format JSON dengan indentasi yang rapi dan menyimpannya dalam variabel data.
+	// perbedaan antara json.Marshal() dan json.MarshalIndent() adalah bahwa json.Marshal() akan menghasilkan output JSON dalam format yang lebih ringkas tanpa indentasi, sedangkan json.MarshalIndent() akan menghasilkan output JSON dengan indentasi yang rapi untuk meningkatkan keterbacaan. Dalam kasus ini, kita menggunakan json.MarshalIndent() untuk menghasilkan output JSON yang lebih mudah dibaca saat menyimpan data ke dalam file users.json.
+	data, _ := json.MarshalIndent(users, "", "  ")
+	// os.WriteFile() merupakan fungsi untuk menulis data ke dalam file. Fungsi ini menerima tiga parameter, yaitu nama file yang akan ditulis, data yang akan ditulis, dan permission untuk file tersebut. Dalam kasus ini, kita menulis data JSON yang telah diindentasikan dengan rapi ke dalam file "data/users.json" dengan permission 0644 (read and write untuk owner, read untuk group dan others).
+	os.WriteFile("data/users.json", data, 0644)
+}
+
+func addChannel(c *gin.Context) {
+	var req createChannelInput
+
+	if err := c.BindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
 		return
 	}
 
-	users = append(users, newUser)
-	c.IndentedJSON(http.StatusCreated, newUser)
-	data, _ := json.MarshalIndent(users, "", "  ")
-	os.WriteFile("users.json", data, 0644)
-	fmt.Println("POST MASUK")
-}
+	newChannel := channel {
+		ChannelId: generateChannelID(),
+		ChannelName: req.ChannelName,
+		ChannelType: req.ChannelType,
+		Description: req.Description,
+	}
 
+	channels = append(channels, newChannel)
+	c.IndentedJSON(http.StatusCreated, newChannel)
+	data, _ := json.MarshalIndent(channels, "", "  ")
+	os.WriteFile("data/channels.json", data, 0644)
+}
 
