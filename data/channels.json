@@ -1,0 +1,38 @@
+[
+  {
+    "channel id": "ch_001",
+    "channel name": "Sports Central",
+    "channel type": "Sport",
+    "description": "Latest news and updates about football, basketball, and other sports"
+  },
+  {
+    "channel id": "ch_002",
+    "channel name": "Movie Mania",
+    "channel type": "Entertainment",
+    "description": "Discussions about latest movies, trailers, and cinema reviews"
+  },
+  {
+    "channel id": "ch_003",
+    "channel name": "Tech Galaxy",
+    "channel type": "Technology",
+    "description": "Breaking tech news, gadget reviews, and software development tips"
+  },
+  {
+    "channel id": "ch_004",
+    "channel name": "Music Studio",
+    "channel type": "Music",
+    "description": "Share and discuss your favorite songs, artists, and playlists"
+  },
+  {
+    "channel id": "ch_005",
+    "channel name": "Wellness Hub",
+    "channel type": "Health",
+    "description": "Tips on fitness, nutrition, mental health, and wellness practices"
+  },
+  {
+    "channel id": "ch_006",
+    "channel name": "Gaming Zone",
+    "channel type": "Gaming",
+    "description": "Join gamers worldwide for game discussions, reviews, and streaming"
+  }
+]

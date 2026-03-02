@@ -2,66 +2,79 @@
   {
     "id": "1",
     "name": "Alice Johnson",
-    "email": "alice.johnson@example.com"
+    "email": "alice.johnson@example.com",
+    "followed_channels_by_id": ["ch_001", "ch_003", "ch_005"]
   },
   {
     "id": "2",
     "name": "Bob Smith",
-    "email": "bob.smith@example.com"
+    "email": "bob.smith@example.com",
+    "followed_channels_by_id": ["ch_002", "ch_006"]
   },
   {
     "id": "3",
     "name": "Carol Williams",
-    "email": "carol.williams@example.com"
+    "email": "carol.williams@example.com",
+    "followed_channels_by_id": ["ch_004", "ch_005"]
   },
   {
     "id": "4",
     "name": "David Brown",
-    "email": "david.brown@example.com"
+    "email": "david.brown@example.com",
+    "followed_channels_by_id": ["ch_001", "ch_006"]
   },
   {
     "id": "5",
     "name": "Eve Davis",
-    "email": "eve.davis@example.com"
+    "email": "eve.davis@example.com",
+    "followed_channels_by_id": ["ch_003", "ch_004"]
   },
   {
     "id": "6",
     "name": "Frank Miller",
-    "email": "frank.miller@example.com"
+    "email": "frank.miller@example.com",
+    "followed_channels_by_id": ["ch_002", "ch_003"]
   },
   {
     "id": "7",
     "name": "Grace Taylor",
-    "email": "grace.taylor@example.com"
+    "email": "grace.taylor@example.com",
+    "followed_channels_by_id": ["ch_001", "ch_004", "ch_005"]
   },
   {
     "id": "8",
     "name": "Henry Anderson",
-    "email": "henry.anderson@example.com"
+    "email": "henry.anderson@example.com",
+    "followed_channels_by_id": ["ch_006"]
   },
   {
     "id": "9",
     "name": "Iris Thomas",
-    "email": "iris.thomas@example.com"
+    "email": "iris.thomas@example.com",
+    "followed_channels_by_id": ["ch_002", "ch_004"]
   },
   {
     "id": "10",
     "name": "Jack Martin",
-    "email": "jack.martin@example.com"
+    "email": "jack.martin@example.com",
+    "followed_channels_by_id": ["ch_001", "ch_003"]
   },
   {
     "id": "11",
     "name": "Jaka Sumbing",
-    "email": "jaka@example.com"
+    "email": "jaka@example.com",
+    "followed_channels_by_id": ["ch_005", "ch_006"]
   },
   {
     "id": "12",
     "name": "Jako",
-    "email": "jako@example.com"
+    "email": "jako@example.com",
+    "followed_channels_by_id": ["ch_002", "ch_003", "ch_004"]
   },
   {
     "id": "13",
     "name": "Rizal Balikpapan",
-    "email": "rizal@example.com"
+    "email": "rizal@example.com",
+    "followed_channels_by_id": ["ch_001", "ch_005"]
   }
 ]

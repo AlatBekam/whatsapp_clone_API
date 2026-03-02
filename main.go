@@ -13,14 +13,25 @@ type user struct {
 	ID	string `json:"id"`
 	Name  string `json:"name"`
 	Email string `json:"email"`
+	FollowedChannelsById []string `json:"followed_channels_by_id"`
+}
+
+type channel struct {
+	ChannelId	string `json:"channel_id"`
+	ChannelName  string `json:"channel_name"`
+	ChannelType string `json:"channel_type"`
+	Description string `json:"description"`
 }
 
 var userJSON []byte
+var channelJSON []byte
 var users []user
+var channels []channel
 
 func main() {
 	var err error
 	userJSON, err = os.ReadFile("data/users.json")
+	channelJSON, err = os.ReadFile("data/channels.json")
 
 	// jika terjadi error saat membaca file users.json, maka program akan panic dan menampilkan pesan error. Hal ini dilakukan untuk memastikan bahwa program tidak melanjutkan eksekusi jika file tidak dapat dibaca, sehingga mencegah terjadinya kesalahan lebih lanjut yang mungkin terjadi akibat data yang tidak tersedia.
 	if err != nil {
@@ -29,11 +40,13 @@ func main() {
 
 	// json.Unmarshal() merupakan fungsi untuk mengkonversi data JSON menjadi struct atau slice dalam bahasa Go. Fungsi ini menerima dua parameter, yaitu data JSON yang akan dikonversi dan variabel yang akan menampung hasil konversi. Dalam kasus ini, kita mengkonversi data JSON yang dibaca dari file users.json menjadi slice of user dan menyimpannya dalam variabel users.
 	json.Unmarshal(userJSON, &users)
+	json.Unmarshal(channelJSON, &channels)
 
 	router := gin.Default()
 	router.GET("/users", getUser)
 	router.GET("/users/:id", getUserByID)
 	router.POST("/users", addUser)
+	router.GET("/channels", getChannel)
 	router.Run("localhost:8080")
 }
 
@@ -46,6 +59,10 @@ func getUser(c *gin.Context) {
 	// c.Data(http.StatusOK, "application/json", userJSON)
 
 	// kenapa menggunakan c.Data() bukan c.IndentedJSON() karena c.IndentedJSON() akan mengirimkan data dalam format JSON dengan indentasi yang rapi, sedangkan c.Data() akan mengirimkan data dalam format yang sesuai dengan content type yang ditentukan. Dalam kasus ini, kita ingin mengirimkan data dalam format JSON tanpa indentasi, sehingga menggunakan c.Data() lebih tepat.
+}
+
+func getChannel(c *gin.Context) {
+	c.IndentedJSON(http.StatusOK, channels)	
 }
 
 func getUserByID(c *gin.Context) {
