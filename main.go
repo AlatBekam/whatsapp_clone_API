@@ -5,15 +5,70 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
+	"time"
 
+	// github.com/gin-gonic/gin merupakan package yang digunakan untuk membuat web framework di Go. Package ini menyediakan berbagai fitur untuk memudahkan pengembangan aplikasi web, seperti routing, middleware, dan rendering template. Dalam kasus ini, kita menggunakan package gin untuk membuat API yang dapat menangani request dan response dalam format JSON.
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 )
+
+// JWT GENERATOR
+var JWT_SECRET_KEY = []byte("WhatsAppCloneSecretKey")
+
+func GenerateJWT(userID string) (string, error) {
+	claims := jwt.MapClaims{
+		"id" : userID,
+		"exp" : time.Now().Add(time.Hour * 24).Unix(),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(JWT_SECRET_KEY)
+}
+
+// JWT MIDDLEWARE
+func JWTAuthMiddleware() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		authHeader := ctx.GetHeader("Authorization")
+
+		if authHeader == "" {
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error":"Authorization header required"})
+			ctx.Abort()
+			return 
+		}
+
+		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+
+		token, err := jwt.Parse(tokenString, func(t *jwt.Token) (any, error) {
+			return JWT_SECRET_KEY, nil
+		})
+
+		if err != nil || !token.Valid {
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error":"Invalid token"})
+			ctx.Abort()
+			return 
+		}
+
+		if claims, ok := token.Claims.(jwt.MapClaims); ok {
+			ctx.Set("id", claims["id"])
+		}
+
+		ctx.Next()
+	}
+}
+
 
 type user struct {
 	ID	string `json:"id"`
 	Name  string `json:"name"`
 	Email string `json:"email"`
+	Password string `json:"password"`
 	FollowedChannelsByID []string `json:"followed_channels_by_id"`
+}
+
+type LoginRequest struct {
+	Name string `json:"name"`
+	Password string `json:"password"`
 }
 
 type channel struct {
@@ -25,8 +80,9 @@ type channel struct {
 
 type createUserInput struct {
 	// binding adalah tag yang digunakan untuk menentukan aturan validasi pada field struct saat melakukan binding data dari request body. Dalam kasus ini, kita menggunakan binding:"required" untuk menandai bahwa field Name pada struct createUserInput wajib diisi saat melakukan binding data JSON dari request body. Jika field Name tidak diisi atau kosong, maka proses binding akan gagal dan menghasilkan error. Dengan menggunakan tag binding:"required", kita dapat memastikan bahwa data yang diterima dari request body memiliki field Name yang valid dan tidak kosong sebelum melanjutkan ke proses selanjutnya.
-	Name string `json:"name" binding:"required"`
-	Email string `json:"email" binding :"required"`
+	Name string `json:"name"`
+	Email string `json:"email"`
+	Password string `json:"password"`
 	FollowedChannelsByID []string `json:"followed_channels_by_id"`
 }
 
@@ -34,7 +90,10 @@ type createChannelInput struct {
 	ChannelName  string `json:"channel_name" binding:"required"`
 	ChannelType string `json:"channel_type" binding:"required"`
 	Description string `json:"description"`
-}	
+}
+
+type M map[string]interface{}
+
 
 var lastUserID int
 var lastChannelID int
@@ -45,6 +104,8 @@ var channels []channel
 
 
 func main() {
+
+
 	var err error
 	userJSON, err = os.ReadFile("data/users.json")
 	channelJSON, err = os.ReadFile("data/channels.json")
@@ -60,14 +121,51 @@ func main() {
 	lastUserID = len(users)
 	lastChannelID = len(channels)
 	
-	
 	router := gin.Default()
-	router.GET("/users", getUser)
-	router.GET("/users/:id", getUserByID)
-	router.POST("/users", addUser)
-	router.GET("/channels", getChannel)
-	router.POST("/channels", addChannel)
+	router.GET("api/public/users", getUser)
+	router.GET("api/public/users/:id", getUserByID)
+	router.POST("api/public/channels", addChannel)
+	router.POST("api/private/login", handlerLogin)
+	
+	protected := router.Group("api/private")
+	protected.Use(JWTAuthMiddleware())
+	protected.GET("/channels", getChannel)
+	protected.POST("/users", addUser)
+	
 	router.Run("localhost:8080")
+}
+
+func handlerLogin(c *gin.Context) {
+	var req LoginRequest
+	userFind := false
+
+	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+				"error":err.Error(),
+		})
+	return
+	}
+
+	for _, a := range users {
+		if req.Name == a.Name && req.Password == a.Password {
+			userFind = true
+			break
+		}
+	}
+
+	if !userFind {
+		c.JSON(http.StatusUnauthorized, gin.H{"error":"Invalid User or Password"})
+		return
+	}
+
+	token, err := GenerateJWT(req.Name)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error":"Failed generate token"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"token":token})
+
 }
 
 
@@ -133,6 +231,7 @@ func addUser(c *gin.Context) {
 		ID : generateUserID(),
 		Name: req.Name,
 		Email: req.Email,
+		Password: req.Password,
 		FollowedChannelsByID: req.FollowedChannelsByID,
 	}
 
