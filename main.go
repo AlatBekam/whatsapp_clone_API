@@ -5,58 +5,13 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strings"
-	"time"
+
+	JsonWebToken "whatsapp-clone-api/JWT"
+	"whatsapp-clone-api/middleware"
 
 	// github.com/gin-gonic/gin merupakan package yang digunakan untuk membuat web framework di Go. Package ini menyediakan berbagai fitur untuk memudahkan pengembangan aplikasi web, seperti routing, middleware, dan rendering template. Dalam kasus ini, kita menggunakan package gin untuk membuat API yang dapat menangani request dan response dalam format JSON.
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 )
-
-// JWT GENERATOR
-var JWT_SECRET_KEY = []byte("WhatsAppCloneSecretKey")
-
-func GenerateJWT(userID string) (string, error) {
-	claims := jwt.MapClaims{
-		"id" : userID,
-		"exp" : time.Now().Add(time.Hour * 24).Unix(),
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(JWT_SECRET_KEY)
-}
-
-// JWT MIDDLEWARE
-func JWTAuthMiddleware() gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		authHeader := ctx.GetHeader("Authorization")
-
-		if authHeader == "" {
-			ctx.JSON(http.StatusUnauthorized, gin.H{"error":"Authorization header required"})
-			ctx.Abort()
-			return 
-		}
-
-		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-
-		token, err := jwt.Parse(tokenString, func(t *jwt.Token) (any, error) {
-			return JWT_SECRET_KEY, nil
-		})
-
-		if err != nil || !token.Valid {
-			ctx.JSON(http.StatusUnauthorized, gin.H{"error":"Invalid token"})
-			ctx.Abort()
-			return 
-		}
-
-		if claims, ok := token.Claims.(jwt.MapClaims); ok {
-			ctx.Set("id", claims["id"])
-		}
-
-		ctx.Next()
-	}
-}
-
 
 type user struct {
 	ID	string `json:"id"`
@@ -128,7 +83,7 @@ func main() {
 	router.POST("api/private/login", handlerLogin)
 	
 	protected := router.Group("api/private")
-	protected.Use(JWTAuthMiddleware())
+	protected.Use(middleware.JWTAuthMiddleware())
 	protected.GET("/channels", getChannel)
 	protected.POST("/users", addUser)
 	
@@ -158,7 +113,7 @@ func handlerLogin(c *gin.Context) {
 		return
 	}
 
-	token, err := GenerateJWT(req.Name)
+	token, err := JsonWebToken.GenerateJWT(req.Name)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error":"Failed generate token"})
 		return
