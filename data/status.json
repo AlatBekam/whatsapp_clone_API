@@ -1,0 +1,20 @@
+[
+  {
+    "StatusID": "st_1",
+    "UserID": "1",
+    "Content": "Halo semuanyaaa",
+    "CreatedAt": "2026-03-04 22:47:49.8925054 +0700 +07"
+  },
+  {
+    "StatusID": "st_2",
+    "UserID": "2",
+    "Content": "Halo semuanyaaa",
+    "CreatedAt": "2026-03-04 22:48:49.8925054 +0700 +07"
+  },
+  {
+    "StatusID": "st_3",
+    "UserID": "4",
+    "Content": "Halo semuanyaaa",
+    "CreatedAt": "2026-03-04 22:50:49.8925054 +0700 +07"
+  }
+]

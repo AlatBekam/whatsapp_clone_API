@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	JsonWebToken "whatsapp-clone-api/JWT"
 	"whatsapp-clone-api/middleware"
@@ -22,16 +23,16 @@ type user struct {
 	FollowedChannelsByID []string `json:"followed_channels_by_id"`
 }
 
-type LoginRequest struct {
-	Name string `json:"name"`
-	Password string `json:"password"`
-}
-
 type channel struct {
 	ChannelId	string `json:"channel_id"`
 	ChannelName  string `json:"channel_name"`
 	ChannelType string `json:"channel_type"`
 	Description string `json:"description"`
+}
+
+type LoginRequest struct {
+	Name string `json:"name"`
+	Password string `json:"password"`
 }
 
 type createUserInput struct {
@@ -41,12 +42,6 @@ type createUserInput struct {
 	Password string `json:"password"`
 	FollowedChannelsByID []string `json:"followed_channels_by_id"`
 }
-type updateUser struct {
-	Name *string `json:"name"`
-	Email *string `json:"email"`
-	Password *string `json:"password"`
-	FollowedChannelsByID *[]string `json:"followed_channels_by_id"`
-}
 
 type createChannelInput struct {
 	ChannelName  string `json:"channel_name" binding:"required"`
@@ -54,12 +49,39 @@ type createChannelInput struct {
 	Description string `json:"description"`
 }
 
+type updateUser struct {
+	Name *string `json:"name"`
+	Email *string `json:"email"`
+	Password *string `json:"password"`
+	FollowedChannelsByID *[]string `json:"followed_channels_by_id"`
+}
+
+type status struct {
+	StatusID string `json:"StatusID"`
+	UserID string `json:"UserID"`
+	Content string `json:"Content"`
+	CreatedAt string `json:"CreatedAt"`
+}
+
+type viewStatus struct {
+	ID string `json:"id"`
+	StatusID string `json:"StatusID"`
+	ViewerID string `json:"ViewerID"`
+	ViewedAt string `json:"ViewedAt"`
+}
+
 var lastUserID int
 var lastChannelID int
+var lastStatuslID int
+var lastViewedStatus int
 var userJSON []byte
 var channelJSON []byte
+var statusJSON []byte
+var viewedStatusJSON []byte
 var users []user
 var channels []channel
+var statuses []status
+var viewedStatus []viewStatus
 
 
 func main() {
@@ -68,6 +90,8 @@ func main() {
 	var err error
 	userJSON, err = os.ReadFile("data/users.json")
 	channelJSON, err = os.ReadFile("data/channels.json")
+	statusJSON, err = os.ReadFile("data/status.json")
+	viewedStatusJSON, err = os.ReadFile("data/viewStatus.json")
 
 	// jika terjadi error saat membaca file users.json, maka program akan panic dan menampilkan pesan error. Hal ini dilakukan untuk memastikan bahwa program tidak melanjutkan eksekusi jika file tidak dapat dibaca, sehingga mencegah terjadinya kesalahan lebih lanjut yang mungkin terjadi akibat data yang tidak tersedia.
 	if err != nil {
@@ -77,8 +101,12 @@ func main() {
 	// json.Unmarshal() merupakan fungsi untuk mengkonversi data JSON menjadi struct atau slice dalam bahasa Go. Fungsi ini menerima dua parameter, yaitu data JSON yang akan dikonversi dan variabel yang akan menampung hasil konversi. Dalam kasus ini, kita mengkonversi data JSON yang dibaca dari file users.json menjadi slice of user dan menyimpannya dalam variabel users.
 	json.Unmarshal(userJSON, &users)
 	json.Unmarshal(channelJSON, &channels)
+	json.Unmarshal(statusJSON, &statuses)
+	json.Unmarshal(viewedStatusJSON, &viewedStatus)
 	lastUserID = len(users)
 	lastChannelID = len(channels)
+	lastStatuslID = len(statuses)
+	lastStatuslID = len(viewedStatus)
 
 	router := gin.Default()
 	router.GET("api/public/users", getUser)
@@ -91,6 +119,8 @@ func main() {
 	protected.Use(middleware.JWTAuthMiddleware())
 	protected.GET("/channels", getChannel)
 	protected.POST("/users", editUserByID)
+	protected.POST("/users/status", createdStatus)
+	protected.POST("/users/status/view", viewStatusbyID)
 
 	router.Run("localhost:8080")
 }
@@ -277,6 +307,14 @@ func generateChannelID() string {
 	lastChannelID++
 	return fmt.Sprintf("ch_%d", lastChannelID)
 }
+func generateStatusID() string {
+	lastStatuslID++
+	return fmt.Sprintf("st_%d", lastStatuslID)
+}
+func generateViewStatus() string {
+	lastViewedStatus++
+	return fmt.Sprintf("view_%d", lastViewedStatus)
+}
 
 func addUser(c *gin.Context) {
 	var req createUserInput
@@ -344,3 +382,62 @@ func addChannel(c *gin.Context) {
 	os.WriteFile("data/channels.json", data, 0644)
 }
 
+func createdStatus(c *gin.Context) {
+	var req status
+
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	idParam, exist := c.Get("userID")
+	IDParam := idParam.(string)
+
+	if !exist {
+		c.JSON(http.StatusUnauthorized, gin.H{"error":"ID Doesnt exist"})
+	}
+
+	newStatus := status {
+		StatusID: generateStatusID(),
+		UserID: IDParam,
+		Content: req.Content,
+		CreatedAt: time.Now().Local().String(),
+	} 
+
+	statuses = append(statuses, newStatus)
+	c.IndentedJSON(http.StatusCreated, newStatus)
+	data, _ := json.MarshalIndent(statuses, "", "  ")
+	os.WriteFile("data/status.json", data, 0644)
+}
+
+func viewStatusbyID(c *gin.Context) {
+	var req viewStatus
+
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":err.Error(),
+		})
+	}
+
+	idParam, exist := c.Get("userID")
+	IDParam := idParam.(string)
+
+	if !exist {
+		c.JSON(http.StatusUnauthorized, gin.H{"error":"ID Doesnt exist"})
+	}
+
+	newViewed := viewStatus {
+		ID: generateViewStatus(),
+		// StatusID harus dirubah menjadi menyesuaikan dengan status yang diklik
+		StatusID: req.StatusID,
+		ViewerID: IDParam,
+		ViewedAt: time.Now().Local().String(),
+	}
+
+	viewedStatus = append(viewedStatus, newViewed)
+	c.IndentedJSON(http.StatusCreated, newViewed)
+	data, _ := json.MarshalIndent(viewedStatus, "", "  ")
+	os.WriteFile("data/viewStatus.json", data, 0644)
+}
