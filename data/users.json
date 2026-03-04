@@ -47,5 +47,19 @@
     "email": "grace.taylor@example.com",
     "password": "Grace123",
     "followed_channels_by_id": ["ch_1", "ch_4", "ch_5"]
+  },
+  {
+    "id": "8",
+    "name": "ucok",
+    "email": "ucok@gmail.com",
+    "password": "usok123",
+    "followed_channels_by_id": null
+  },
+  {
+    "id": "9",
+    "name": "joko",
+    "email": "joko@gmail.com",
+    "password": "joko123",
+    "followed_channels_by_id": null
   }
 ]
