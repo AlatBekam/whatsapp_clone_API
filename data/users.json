@@ -1,7 +1,7 @@
 [
   {
     "id": "1",
-    "name": "Alice Johnson",
+    "name": "RizalKece",
     "email": "alice.johnson@example.com",
     "password": "Alice123",
     "followed_channels_by_id": ["ch_1", "ch_3", "ch_5"]

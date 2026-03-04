@@ -10,6 +10,7 @@ import (
 	"whatsapp-clone-api/middleware"
 
 	// github.com/gin-gonic/gin merupakan package yang digunakan untuk membuat web framework di Go. Package ini menyediakan berbagai fitur untuk memudahkan pengembangan aplikasi web, seperti routing, middleware, dan rendering template. Dalam kasus ini, kita menggunakan package gin untuk membuat API yang dapat menangani request dan response dalam format JSON.
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -40,15 +41,18 @@ type createUserInput struct {
 	Password string `json:"password"`
 	FollowedChannelsByID []string `json:"followed_channels_by_id"`
 }
+type updateUser struct {
+	Name *string `json:"name"`
+	Email *string `json:"email"`
+	Password *string `json:"password"`
+	FollowedChannelsByID *[]string `json:"followed_channels_by_id"`
+}
 
 type createChannelInput struct {
 	ChannelName  string `json:"channel_name" binding:"required"`
 	ChannelType string `json:"channel_type" binding:"required"`
 	Description string `json:"description"`
 }
-
-type M map[string]interface{}
-
 
 var lastUserID int
 var lastChannelID int
@@ -80,12 +84,13 @@ func main() {
 	router.GET("api/public/users", getUser)
 	router.GET("api/public/users/:id", getUserByID)
 	router.POST("api/public/channels", addChannel)
-	router.POST("api/private/login", handlerLogin)
+	router.POST("api/public/login", handlerLogin)
 	router.POST("api/public/users", addUser)
 
 	protected := router.Group("api/private")
 	protected.Use(middleware.JWTAuthMiddleware())
 	protected.GET("/channels", getChannel)
+	protected.POST("/users", editUserByID)
 
 	router.Run("localhost:8080")
 }
@@ -93,6 +98,7 @@ func main() {
 func handlerLogin(c *gin.Context) {
 	var req LoginRequest
 	userFind := false
+	var userID string
 
 	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -109,6 +115,7 @@ func handlerLogin(c *gin.Context) {
 	for _, a := range users {
 		if req.Name == a.Name && req.Password == a.Password {
 			userFind = true
+			userID = a.ID
 			break
 		}
 	}
@@ -118,7 +125,7 @@ func handlerLogin(c *gin.Context) {
 		return
 	}
 
-	token, err := JsonWebToken.GenerateJWT(req.Name)
+	token, err := JsonWebToken.GenerateJWT(userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error":"Failed generate token"})
 		return
@@ -155,11 +162,13 @@ func getUser(c *gin.Context) {
 func getChannel(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, channels)
 
-			response := gin.H{ "response": users,}
+	// fmt.Println("All Headers:", c.Request.Header)
 
-fmt.Println("===== RESPONSE =====")
-fmt.Println(response)
-fmt.Println("====================")
+	response := gin.H{ "response": channels,}
+
+	fmt.Println("===== RESPONSE =====")
+	fmt.Println(response)
+	fmt.Println("====================")
 }
 
 func getUserByID(c *gin.Context) {
@@ -177,6 +186,87 @@ func getUserByID(c *gin.Context) {
 		}
 	}
 	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "user not found"})
+}
+
+func saveUserToJson(users []user) error {
+	file, err := os.Create("data/users.json")
+
+	if err != nil {
+		return err
+	}
+
+	defer file.Close()
+	
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "  ")
+
+	return encoder.Encode(users)
+}
+
+func editUserByID(c *gin.Context) {
+	var req updateUser
+	found := false
+
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{	
+			"error": err.Error(),
+		})
+	return
+	}
+
+	idParam, exist := c.Get("userID")
+	IDParam := idParam.(string)
+	if(!exist) {
+		c.JSON(http.StatusUnauthorized, gin.H{"error":"ID Doesnt exist"})
+		return
+	}
+
+	for a := range users {
+		if users[a].ID == IDParam {
+			if req.Name != nil {
+				users[a].Name = *req.Name
+			}
+			if req.Email != nil {
+				users[a].Email = *req.Email
+			}
+			if req.Password != nil {
+				users[a].Password = *req.Password
+			}
+			if req.FollowedChannelsByID != nil {
+				users[a].FollowedChannelsByID = *req.FollowedChannelsByID
+			}
+			found = true
+		}
+	}
+
+	if(!found) {
+		c.JSON(http.StatusNotFound, gin.H{"error":"user not found"})
+	}
+
+	err := saveUserToJson(users);
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error":"Failed to save file"})
+		return
+	}
+
+	// c.JSON(http.StatusOK, gin.H{
+	// 	"success": true,
+	// 	"user": users,
+	// })
+
+	// fmt.Println("User ID dari token:", IDParam)
+	// fmt.Println("Update name jadi:", *req.Name)
+	// fmt.Println("Update Password jadi:", *req.Password)
+	// fmt.Println("Update email jadi:", req.Email)
+	// fmt.Println("tambah channel:", req.FollowedChannelsByID)
+
+	
+
+	// for _, a := range users {
+	// 	if a.ID == idParam {
+	// 		c.IndentedJSON(http.StatusOK, )
+	// 	}
+	// }
 }
 
 func generateUserID() string {
