@@ -16,58 +16,72 @@ import (
 )
 
 type user struct {
-	ID	string `json:"id"`
-	Name  string `json:"name"`
-	Email string `json:"email"`
-	Password string `json:"password"`
+	ID                   string   `json:"id"`
+	Name                 string   `json:"name"`
+	Email                string   `json:"email"`
+	Password             string   `json:"password"`
 	FollowedChannelsByID []string `json:"followed_channels_by_id"`
 }
 
 type channel struct {
-	ChannelId	string `json:"channel_id"`
-	ChannelName  string `json:"channel_name"`
+	ChannelId   string `json:"channel_id"`
+	ChannelName string `json:"channel_name"`
 	ChannelType string `json:"channel_type"`
 	Description string `json:"description"`
 }
 
 type LoginRequest struct {
-	Name string `json:"name"`
+	Name     string `json:"name"`
 	Password string `json:"password"`
 }
 
 type createUserInput struct {
 	// binding adalah tag yang digunakan untuk menentukan aturan validasi pada field struct saat melakukan binding data dari request body. Dalam kasus ini, kita menggunakan binding:"required" untuk menandai bahwa field Name pada struct createUserInput wajib diisi saat melakukan binding data JSON dari request body. Jika field Name tidak diisi atau kosong, maka proses binding akan gagal dan menghasilkan error. Dengan menggunakan tag binding:"required", kita dapat memastikan bahwa data yang diterima dari request body memiliki field Name yang valid dan tidak kosong sebelum melanjutkan ke proses selanjutnya.
-	Name string `json:"name"`
-	Email string `json:"email"`
-	Password string `json:"password"`
+	Name                 string   `json:"name"`
+	Email                string   `json:"email"`
+	Password             string   `json:"password"`
 	FollowedChannelsByID []string `json:"followed_channels_by_id"`
 }
 
 type createChannelInput struct {
-	ChannelName  string `json:"channel_name" binding:"required"`
+	ChannelName string `json:"channel_name" binding:"required"`
 	ChannelType string `json:"channel_type" binding:"required"`
 	Description string `json:"description"`
 }
 
 type updateUser struct {
-	Name *string `json:"name"`
-	Email *string `json:"email"`
-	Password *string `json:"password"`
+	Name                 *string   `json:"name"`
+	Email                *string   `json:"email"`
+	Password             *string   `json:"password"`
 	FollowedChannelsByID *[]string `json:"followed_channels_by_id"`
 }
 
 type status struct {
-	StatusID string `json:"StatusID"`
-	UserID string `json:"UserID"`
-	Content string `json:"Content"`
+	StatusID  string `json:"StatusID"`
+	UserID    string `json:"UserID"`
+	Content   string `json:"Content"`
 	CreatedAt string `json:"CreatedAt"`
 }
 
 type viewStatus struct {
-	ID string `json:"id"`
+	ID       string `json:"id"`
 	StatusID string `json:"StatusID"`
 	ViewerID string `json:"ViewerID"`
 	ViewedAt string `json:"ViewedAt"`
+}
+
+type community struct {
+	CommunityID         string  `json:"community_id"`
+	CommunityName       string  `json:"community_name"`
+	Description         string  `json:"description"`
+	AnnouncementGroupID *string `json:"announcement_group_id"`
+}
+
+type group struct {
+	GroupID     string  `json:"group_id"`
+	GroupName   string  `json:"group_name"`
+	Description string  `json:"description"`
+	CommunityID *string `json:"community_id"`
 }
 
 var lastUserID int
@@ -83,9 +97,7 @@ var channels []channel
 var statuses []status
 var viewedStatus []viewStatus
 
-
 func main() {
-
 
 	var err error
 	userJSON, err = os.ReadFile("data/users.json")
@@ -121,6 +133,10 @@ func main() {
 	protected.POST("/users", editUserByID)
 	protected.POST("/users/status", createdStatus)
 	protected.POST("/users/status/view", viewStatusbyID)
+	protected.POST("/community", createCommunity)
+	protected.GET("/community", getCommunity)
+	protected.POST("/group", createGroup)
+	protected.POST("/community/add-group", addGroupToCommunity)
 
 	router.Run("localhost:8080")
 }
@@ -132,9 +148,9 @@ func handlerLogin(c *gin.Context) {
 
 	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-				"error":err.Error(),
+			"error": err.Error(),
 		})
-	return
+		return
 	}
 
 	// fmt.Println("===== REQUEST MASUK =====")
@@ -151,31 +167,30 @@ func handlerLogin(c *gin.Context) {
 	}
 
 	if !userFind {
-		c.JSON(http.StatusUnauthorized, gin.H{"error":"Invalid User or Password"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid User or Password"})
 		return
 	}
 
 	token, err := JsonWebToken.GenerateJWT(userID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error":"Failed generate token"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed generate token"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"success":true, "token":token})
+	c.JSON(http.StatusOK, gin.H{"success": true, "token": token})
 
-// 	response := gin.H{
-// 	"success": true,
-// 	"token":   token,
-// }
+	// 	response := gin.H{
+	// 	"success": true,
+	// 	"token":   token,
+	// }
 
-// fmt.Println("===== RESPONSE =====")
-// fmt.Println(response)
-// fmt.Println("====================")
+	// fmt.Println("===== RESPONSE =====")
+	// fmt.Println(response)
+	// fmt.Println("====================")
 
-// c.JSON(http.StatusOK, response)
+	// c.JSON(http.StatusOK, response)
 
 }
-
 
 func getUser(c *gin.Context) {
 	// c.indentedJSON() merupakan fungsi untuk mengirimkan response dalam format JSON dengan indentasi yang rapi. Fungsi ini menerima dua parameter, yaitu status code HTTP dan data yang akan dikirimkan dalam format JSON. Dalam kasus ini, kita mengirimkan status code http.StatusOK (200) dan data userJSON yang berisi informasi tentang semua user.
@@ -194,7 +209,7 @@ func getChannel(c *gin.Context) {
 
 	// fmt.Println("All Headers:", c.Request.Header)
 
-	response := gin.H{ "response": channels,}
+	response := gin.H{"response": channels}
 
 	fmt.Println("===== RESPONSE =====")
 	fmt.Println(response)
@@ -210,7 +225,7 @@ func getUserByID(c *gin.Context) {
 	// kita melakukan iterasi pada slice users untuk mencari user dengan ID yang sesuai dengan idParam. Jika ditemukan, maka kita mengirimkan response dengan status code http.StatusOK (200) dan data user yang ditemukan dalam format JSON. Jika tidak ditemukan, maka kita mengirimkan response dengan status code http.StatusNotFound (404) dan pesan "user not found".
 	// pada golang, _ digunakan untuk mengabaikan nilai yang dikembalikan oleh fungsi. Dalam kasus ini, kita mengabaikan nilai error yang dikembalikan oleh strconv.Atoi() karena kita tidak perlu melakukan konversi ke integer. Namun, jika kita ingin menangani error tersebut, kita dapat menggunakan variabel lain untuk menyimpan nilai error dan melakukan pengecekan sebelum melanjutkan eksekusi.
 	for _, a := range users {
-		if a.ID == 	idParam {
+		if a.ID == idParam {
 			c.IndentedJSON(http.StatusOK, a)
 			return
 		}
@@ -226,7 +241,7 @@ func saveUserToJson(users []user) error {
 	}
 
 	defer file.Close()
-	
+
 	encoder := json.NewEncoder(file)
 	encoder.SetIndent("", "  ")
 
@@ -238,16 +253,16 @@ func editUserByID(c *gin.Context) {
 	found := false
 
 	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{	
+		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
-	return
+		return
 	}
 
 	idParam, exist := c.Get("userID")
 	IDParam := idParam.(string)
-	if(!exist) {
-		c.JSON(http.StatusUnauthorized, gin.H{"error":"ID Doesnt exist"})
+	if !exist {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "ID Doesnt exist"})
 		return
 	}
 
@@ -269,13 +284,13 @@ func editUserByID(c *gin.Context) {
 		}
 	}
 
-	if(!found) {
-		c.JSON(http.StatusNotFound, gin.H{"error":"user not found"})
+	if !found {
+		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
 	}
 
-	err := saveUserToJson(users);
+	err := saveUserToJson(users)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error":"Failed to save file"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
 		return
 	}
 
@@ -289,8 +304,6 @@ func editUserByID(c *gin.Context) {
 	// fmt.Println("Update Password jadi:", *req.Password)
 	// fmt.Println("Update email jadi:", req.Email)
 	// fmt.Println("tambah channel:", req.FollowedChannelsByID)
-
-	
 
 	// for _, a := range users {
 	// 	if a.ID == idParam {
@@ -332,26 +345,25 @@ func addUser(c *gin.Context) {
 		return
 	}
 
-	newUser := user {
-		ID : generateUserID(),
-		Name: req.Name,
-		Email: req.Email,
-		Password: req.Password,
+	newUser := user{
+		ID:                   generateUserID(),
+		Name:                 req.Name,
+		Email:                req.Email,
+		Password:             req.Password,
 		FollowedChannelsByID: req.FollowedChannelsByID,
 	}
 
 	// kita melakukan iterasi pada slice users untuk memeriksa apakah ada user dengan ID yang sama dengan newUser.ID. Jika ditemukan, maka kita mengirimkan response dengan status code http.StatusConflict (409) dan pesan "user with the same ID already exists". Jika tidak ditemukan, maka kita melanjutkan proses untuk menambahkan data user baru ke dalam slice users. Namun, dalam kasus ini, kita tidak perlu melakukan pengecekan untuk ID yang sama karena ID pada struct user dihasilkan secara otomatis menggunakan fungsi generateUserID(), sehingga tidak mungkin ada dua user dengan ID yang sama. Oleh karena itu, kita dapat langsung menambahkan data user baru ke dalam slice users tanpa perlu melakukan pengecekan untuk ID yang sama.
 	for _, a := range users {
 		if newUser.Email == a.Email {
-			c.IndentedJSON(http.StatusConflict, gin.H{"success":false, "message": "Email Already Use"})
+			c.IndentedJSON(http.StatusConflict, gin.H{"success": false, "message": "Email Already Use"})
 			return
 		}
 	}
 
-
 	// users = append(users, newUser) merupakan fungsi untuk menambahkan data user baru yang telah diterima dari request body ke dalam slice users. Fungsi append() digunakan untuk menambahkan elemen baru ke dalam slice. Dalam kasus ini, kita menambahkan newUser ke dalam slice users, sehingga data user baru tersebut akan disimpan dalam slice users dan dapat diakses melalui endpoint GET /users. Setelah menambahkan data user baru ke dalam slice users, kita mengirimkan response dengan status code http.StatusCreated (201) dan data user baru yang telah ditambahkan dalam format JSON.
 	users = append(users, newUser)
-	c.IndentedJSON(http.StatusCreated, gin.H{"success":true, "data":newUser})
+	c.IndentedJSON(http.StatusCreated, gin.H{"success": true, "data": newUser})
 	// json.MarshalIndent() merupakan fungsi untuk mengkonversi data dalam format struct atau slice menjadi format JSON dengan indentasi yang rapi. Fungsi ini menerima tiga parameter, yaitu data yang akan dikonversi, prefix untuk setiap baris (dalam kasus ini kita menggunakan string kosong), dan indentasi yang digunakan untuk setiap level (dalam kasus ini kita menggunakan dua spasi). Fungsi ini akan mengembalikan data dalam format JSON yang telah diindentasikan dengan rapi. Dalam kasus ini, kita mengkonversi slice users yang telah diperbarui dengan data user baru menjadi format JSON dengan indentasi yang rapi dan menyimpannya dalam variabel data.
 	// perbedaan antara json.Marshal() dan json.MarshalIndent() adalah bahwa json.Marshal() akan menghasilkan output JSON dalam format yang lebih ringkas tanpa indentasi, sedangkan json.MarshalIndent() akan menghasilkan output JSON dengan indentasi yang rapi untuk meningkatkan keterbacaan. Dalam kasus ini, kita menggunakan json.MarshalIndent() untuk menghasilkan output JSON yang lebih mudah dibaca saat menyimpan data ke dalam file users.json.
 	data, _ := json.MarshalIndent(users, "", "  ")
@@ -369,8 +381,8 @@ func addChannel(c *gin.Context) {
 		return
 	}
 
-	newChannel := channel {
-		ChannelId: generateChannelID(),
+	newChannel := channel{
+		ChannelId:   generateChannelID(),
 		ChannelName: req.ChannelName,
 		ChannelType: req.ChannelType,
 		Description: req.Description,
@@ -396,15 +408,15 @@ func createdStatus(c *gin.Context) {
 	IDParam := idParam.(string)
 
 	if !exist {
-		c.JSON(http.StatusUnauthorized, gin.H{"error":"ID Doesnt exist"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "ID Doesnt exist"})
 	}
 
-	newStatus := status {
-		StatusID: generateStatusID(),
-		UserID: IDParam,
-		Content: req.Content,
+	newStatus := status{
+		StatusID:  generateStatusID(),
+		UserID:    IDParam,
+		Content:   req.Content,
 		CreatedAt: time.Now().Local().String(),
-	} 
+	}
 
 	statuses = append(statuses, newStatus)
 	c.IndentedJSON(http.StatusCreated, newStatus)
@@ -417,7 +429,7 @@ func viewStatusbyID(c *gin.Context) {
 
 	if err := c.BindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error":err.Error(),
+			"error": err.Error(),
 		})
 	}
 
@@ -425,10 +437,10 @@ func viewStatusbyID(c *gin.Context) {
 	IDParam := idParam.(string)
 
 	if !exist {
-		c.JSON(http.StatusUnauthorized, gin.H{"error":"ID Doesnt exist"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "ID Doesnt exist"})
 	}
 
-	newViewed := viewStatus {
+	newViewed := viewStatus{
 		ID: generateViewStatus(),
 		// StatusID harus dirubah menjadi menyesuaikan dengan status yang diklik
 		StatusID: req.StatusID,
@@ -440,4 +452,112 @@ func viewStatusbyID(c *gin.Context) {
 	c.IndentedJSON(http.StatusCreated, newViewed)
 	data, _ := json.MarshalIndent(viewedStatus, "", "  ")
 	os.WriteFile("data/viewStatus.json", data, 0644)
+}
+
+func createCommunity(c *gin.Context) {
+
+	var newCommunity community
+
+	if err := c.BindJSON(&newCommunity); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	file, _ := os.ReadFile("data/community.json")
+
+	var communities []community
+	json.Unmarshal(file, &communities)
+
+	newCommunity.CommunityID = fmt.Sprintf("com_%d", len(communities)+1)
+
+	communities = append(communities, newCommunity)
+
+	data, _ := json.MarshalIndent(communities, "", " ")
+
+	os.WriteFile("community.json", data, 0644)
+
+	c.JSON(200, newCommunity)
+}
+
+func getCommunity(c *gin.Context) {
+
+	file, err := os.ReadFile("data/community.json")
+
+	if err != nil {
+		fmt.Println(err)
+		c.JSON(500, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	var communities []community
+
+	err = json.Unmarshal(file, &communities)
+
+	if err != nil {
+		fmt.Println(err)
+		c.JSON(500, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(200, communities)
+}
+
+func createGroup(c *gin.Context) {
+
+	var newGroup group
+
+	if err := c.BindJSON(&newGroup); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	file, _ := os.ReadFile("data/group.json")
+
+	var groups []group
+	json.Unmarshal(file, &groups)
+
+	newGroup.GroupID = fmt.Sprintf("grp_%d", len(groups)+1)
+
+	groups = append(groups, newGroup)
+
+	data, _ := json.MarshalIndent(groups, "", " ")
+
+	os.WriteFile("group.json", data, 0644)
+
+	c.JSON(200, newGroup)
+}
+
+func addGroupToCommunity(c *gin.Context) {
+
+	type Request struct {
+		GroupID     string `json:"group_id"`
+		CommunityID string `json:"community_id"`
+	}
+
+	var req Request
+
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	file, _ := os.ReadFile("data/group.json")
+
+	var groups []group
+	json.Unmarshal(file, &groups)
+
+	for i := range groups {
+		if groups[i].GroupID == req.GroupID {
+			groups[i].CommunityID = &req.CommunityID
+		}
+	}
+
+	data, _ := json.MarshalIndent(groups, "", " ")
+	os.WriteFile("group.json", data, 0644)
+
+	c.JSON(200, gin.H{"message": "group added to community"})
 }
