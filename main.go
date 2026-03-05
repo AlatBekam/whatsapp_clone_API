@@ -135,8 +135,10 @@ func main() {
 	protected.POST("/users/status/view", viewStatusbyID)
 	protected.POST("/community", createCommunity)
 	protected.GET("/community", getCommunity)
+	protected.DELETE("/community/:id", deleteCommunity)
 	protected.POST("/group", createGroup)
 	protected.POST("/community/add-group", addGroupToCommunity)
+	protected.PUT("/community/:id", updateCommunity)
 
 	router.Run("localhost:8080")
 }
@@ -474,7 +476,7 @@ func createCommunity(c *gin.Context) {
 
 	data, _ := json.MarshalIndent(communities, "", " ")
 
-	os.WriteFile("community.json", data, 0644)
+	os.WriteFile("data/community.json", data, 0644)
 
 	c.JSON(200, newCommunity)
 }
@@ -560,4 +562,86 @@ func addGroupToCommunity(c *gin.Context) {
 	os.WriteFile("group.json", data, 0644)
 
 	c.JSON(200, gin.H{"message": "group added to community"})
+}
+
+func deleteCommunity(c *gin.Context) {
+
+	id := c.Param("id")
+
+	file, _ := os.ReadFile("data/community.json")
+
+	var communities []community
+	json.Unmarshal(file, &communities)
+
+	var updated []community
+
+	for _, com := range communities {
+		if com.CommunityID != id {
+			updated = append(updated, com)
+		}
+	}
+
+	data, _ := json.MarshalIndent(updated, "", " ")
+	os.WriteFile("data/community.json", data, 0644)
+
+	c.JSON(200, gin.H{
+		"message": "community deleted",
+	})
+}
+
+func updateCommunity(c *gin.Context) {
+
+	id := c.Param("id")
+
+	type UpdateRequest struct {
+		CommunityName *string `json:"community_name"`
+		Description   *string `json:"description"`
+	}
+
+	var req UpdateRequest
+
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	file, err := os.ReadFile("data/community.json")
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	var communities []community
+	json.Unmarshal(file, &communities)
+
+	found := false
+
+	for i := range communities {
+
+		if communities[i].CommunityID == id {
+
+			if req.CommunityName != nil {
+				communities[i].CommunityName = *req.CommunityName
+			}
+
+			if req.Description != nil {
+				communities[i].Description = *req.Description
+			}
+
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		c.JSON(404, gin.H{"error": "community not found"})
+		return
+	}
+
+	data, _ := json.MarshalIndent(communities, "", " ")
+	os.WriteFile("data/community.json", data, 0644)
+
+	c.JSON(200, gin.H{
+		"message": "community updated",
+	})
 }

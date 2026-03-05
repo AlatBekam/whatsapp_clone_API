@@ -1,8 +1,32 @@
 [
-    {
-        "community_id": "com_1",
-        "community_name": "Flutter Dev",
-        "description": "Belajar Flutter",
-        "announcement_group_id": "grp_1"
-    }
+ {
+  "community_id": "com_2",
+  "community_name": "AI Developer",
+  "description": "Gas Belajar dan memperdalam AI",
+  "announcement_group_id": "grp_4"
+ },
+ {
+  "community_id": "com_3",
+  "community_name": "Web Dev",
+  "description": "Belajar Web",
+  "announcement_group_id": null
+ },
+ {
+  "community_id": "com_4",
+  "community_name": "Cyber Security",
+  "description": "Belajar jadi Hacker",
+  "announcement_group_id": null
+ },
+ {
+  "community_id": "com_5",
+  "community_name": "Hotama",
+  "description": "Consultant IT",
+  "announcement_group_id": null
+ },
+ {
+  "community_id": "com_5",
+  "community_name": "Siskom",
+  "description": "Siskom UNTAN",
+  "announcement_group_id": null
+ }
 ]

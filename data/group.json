@@ -16,5 +16,11 @@
         "group_name": "Backend Golang",
         "description": "Belajar backend",
         "community_id": null
+    },
+        {
+        "group_id": "grp_4",
+        "group_name": "Backend Golang",
+        "description": "Belajar backend",
+        "community_id": "com_2"
     }
 ]
