@@ -87,9 +87,15 @@
   },
   {
     "id": "10",
+<<<<<<< Updated upstream
     "name": "apa",
     "email": "terserah@gmail.com",
     "password": "aja",
+=======
+    "name": "rizal",
+    "email": "gnteng@sekali.com",
+    "password": "rizala",
+>>>>>>> Stashed changes
     "followed_channels_by_id": null
   }
 ]

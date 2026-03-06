@@ -55,6 +55,7 @@ type createChannelInput struct {
 	Description string `json:"description"`
 }
 
+<<<<<<< Updated upstream
 type message struct {
 	MessageID string `json:"message_id"`
 	SenderID  string `json:"sender_id"`
@@ -72,22 +73,49 @@ type chat struct {
 	Messages []message `json:"messages"`
 }
 
+=======
+type Massage struct {
+	SenderID string `json:"sender_id"`
+	Content string `json:"content"`
+	Timestamp string `json:"timestamp"`
+}
+
+
+type ChatPage struct {
+	ChatID string `json:"chat_id"`
+	UserID [2]string `json:"user_id"`
+	Chat []Massage `json:"chat"`
+}
+
+
+var chatPages []ChatPage
+>>>>>>> Stashed changes
 var lastUserID int
 var lastChannelID int
 var userJSON []byte
 var channelJSON []byte
 var users []user
 var channels []channel
+<<<<<<< Updated upstream
 var chats []chat
 var chatsJSON []byte
 var lastchatID int
+=======
+var chatJSON []byte
+var lastChatID int
+
+>>>>>>> Stashed changes
 
 func main() {
 
 	var err error
 	userJSON, err = os.ReadFile("data/users.json")
 	channelJSON, err = os.ReadFile("data/channels.json")
+<<<<<<< Updated upstream
 	chatsJSON, err := os.ReadFile("data/datachat.json")
+=======
+	chatJSON, err = os.ReadFile("data/datachat.json")
+>>>>>>> Stashed changes
 
 	// jika terjadi error saat membaca file users.json, maka program akan panic dan menampilkan pesan error. Hal ini dilakukan untuk memastikan bahwa program tidak melanjutkan eksekusi jika file tidak dapat dibaca, sehingga mencegah terjadinya kesalahan lebih lanjut yang mungkin terjadi akibat data yang tidak tersedia.
 	if err != nil {
@@ -97,10 +125,17 @@ func main() {
 	// json.Unmarshal() merupakan fungsi untuk mengkonversi data JSON menjadi struct atau slice dalam bahasa Go. Fungsi ini menerima dua parameter, yaitu data JSON yang akan dikonversi dan variabel yang akan menampung hasil konversi. Dalam kasus ini, kita mengkonversi data JSON yang dibaca dari file users.json menjadi slice of user dan menyimpannya dalam variabel users.
 	json.Unmarshal(userJSON, &users)
 	json.Unmarshal(channelJSON, &channels)
+<<<<<<< Updated upstream
 	json.Unmarshal(chatsJSON, &chats)
 	lastUserID = len(users)
 	lastChannelID = len(channels)
 	lastchatID = len(chats)
+=======
+	json.Unmarshal(chatJSON, &chatPages)
+	lastUserID = len(users)
+	lastChannelID = len(channels)
+	lastChatID = len(chatPages)
+>>>>>>> Stashed changes
 
 	router := gin.Default()
 	router.GET("api/public/users", getUser)
@@ -108,14 +143,18 @@ func main() {
 	router.POST("api/public/channels", addChannel)
 	router.POST("api/public/login", handlerLogin)
 	router.POST("api/public/users", addUser)
+	// router.GET("api/public/chats", getChat)
 
 	protected := router.Group("api/private")
 	protected.Use(middleware.JWTAuthMiddleware())
 	protected.GET("/channels", getChannel)
 	protected.POST("/users", editUserByID)
 	protected.POST("/chats", addChat)
+<<<<<<< Updated upstream
 	protected.GET("/chats", getChat)
 	protected.POST("/chats/:chat_id/messages", sendMessage)
+=======
+>>>>>>> Stashed changes
 
 	router.Run(":8080")
 }
@@ -463,6 +502,10 @@ func generateUserID() string {
 	lastUserID++
 	return fmt.Sprintf("%d", lastUserID)
 }
+func generateChatID() string {
+	lastChatID++
+	return fmt.Sprintf("%d", lastChatID)
+}
 func generateChannelID() string {
 	lastChannelID++
 	return fmt.Sprintf("ch_%d", lastChannelID)
@@ -508,6 +551,66 @@ func addUser(c *gin.Context) {
 	data, _ := json.MarshalIndent(users, "", "  ")
 	// os.WriteFile() merupakan fungsi untuk menulis data ke dalam file. Fungsi ini menerima tiga parameter, yaitu nama file yang akan ditulis, data yang akan ditulis, dan permission untuk file tersebut. Dalam kasus ini, kita menulis data JSON yang telah diindentasikan dengan rapi ke dalam file "data/users.json" dengan permission 0644 (read and write untuk owner, read untuk group dan others).
 	os.WriteFile("data/users.json", data, 0644)
+}
+
+// func getMyId(c *gin.Context) {
+// 	idParam, exist := c.Get("id")
+// 	if (!exist) {
+// 		c.IndentedJSON(http.StatusNotFound, gin.H{"error": "User not found"})
+// 	}
+// 	IDParam := idParam.(string)
+// 	c.IndentedJSON(http.StatusOK, gin.H{"user_id": IDParam})
+// }
+
+// func getID(c *gin.Context) {
+// 	idParam, exist := c.Get("id")
+// 	if (!exist) {
+// 		c.IndentedJSON(http.StatusNotFound, gin.H{"error": "User not found"})
+// 	}
+// 	IDParam := idParam.(string)
+// 	c.IndentedJSON(http.StatusOK, gin.H{"user_id": IDParam})
+// }
+
+func addChat(c *gin.Context) {
+	MyIDAny, exist := c.Get("UserID")
+	if (!exist) {
+		c.IndentedJSON(http.StatusUnauthorized, gin.H{
+			"error":"Unautohrized",
+		})
+	}
+	MyID := MyIDAny.(string)
+
+	var req struct {
+		OpponentID string `json:"opponent_id"`
+}
+
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	for _, chat := range chatPages {
+		u := chat.UserID
+		if (u[0] == MyID && u[1] == req.OpponentID) || (u[0] == req.OpponentID && u[1] == MyID) {
+			c.IndentedJSON(http.StatusOK, gin.H{
+				"chat_id": chat.ChatID,
+			})
+			return
+		}
+	}
+	newChat := ChatPage {
+		ChatID: generateChatID(),
+		UserID: [2]string{MyID, req.OpponentID},
+		Chat: []Massage{},
+	}
+	chatPages = append(chatPages, newChat)
+	c.IndentedJSON(http.StatusCreated, newChat)
+	data, _ := json.MarshalIndent(chatPages, "", "  ")
+	os.WriteFile("data/datachat.json", data, 0644)
+
+
 }
 
 func addChannel(c *gin.Context) {
