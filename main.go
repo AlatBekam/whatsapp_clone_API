@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	JsonWebToken "whatsapp-clone-api/JWT"
 	"whatsapp-clone-api/middleware"
@@ -61,6 +62,10 @@ type message struct {
 	Timestamp int    `json:"timestamp"`
 }
 
+type sendMessageInput struct {
+	Content string `json:"content" binding:"required"`
+}
+
 type chat struct {
 	ChatID   string    `json:"chat_id"`
 	UserID   [2]string `json:"user_id"`
@@ -110,6 +115,7 @@ func main() {
 	protected.POST("/users", editUserByID)
 	protected.POST("/chats", addChat)
 	protected.GET("/chats", getChat)
+	protected.POST("/chats/:chat_id/messages", sendMessage)
 
 	router.Run(":8080")
 }
@@ -124,6 +130,7 @@ func addChat(c *gin.Context) {
 
 	var req struct {
 		ReceiverID string `json:"receiver_id"`
+		Message    string `json:"message"`
 	}
 	if err := c.BindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -132,21 +139,53 @@ func addChat(c *gin.Context) {
 		return
 	}
 
-	for _, a := range chats {
+	// Validasi input
+	if req.ReceiverID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "receiver_id is required"})
+		return
+	}
+
+	if req.Message == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "message is required"})
+		return
+	}
+
+	// Cek apakah chat sudah ada
+	for i, a := range chats {
 		u := a.UserID
 		if (u[0] == myID && u[1] == req.ReceiverID) || (u[0] == req.ReceiverID && u[1] == myID) {
-			c.JSON(http.StatusOK, gin.H{"chat_id": a.ChatID})
+			// Chat ditemukan, tambahkan pesan
+			newMessageID := len(chats[i].Messages) + 1
+			newMessage := message{
+				MessageID: fmt.Sprintf("%d", newMessageID),
+				SenderID:  myID,
+				Content:   req.Message,
+				Timestamp: 0,
+			}
+			chats[i].Messages = append(chats[i].Messages, newMessage)
+
+			// Simpan ke file
+			data, _ := json.MarshalIndent(chats, "", "  ")
+			os.WriteFile("data/datachat.json", data, 0644)
+
+			c.JSON(http.StatusOK, gin.H{"chat_id": a.ChatID, "message": newMessage})
 			return
 		}
 	}
 
-	// Jika chat tidak ditemukan, buat chat baru
+	// Jika chat tidak ditemukan, buat chat baru dengan pesan pertama
 	lastchatID++
 	newChatID := fmt.Sprintf("chat_%d", lastchatID)
+	newMessage := message{
+		MessageID: "1",
+		SenderID:  myID,
+		Content:   req.Message,
+		Timestamp: int(time.Now().Unix()),
+	}
 	newChat := chat{
 		ChatID:   newChatID,
 		UserID:   [2]string{myID, req.ReceiverID},
-		Messages: []message{},
+		Messages: []message{newMessage},
 	}
 	chats = append(chats, newChat)
 
@@ -154,7 +193,7 @@ func addChat(c *gin.Context) {
 	data, _ := json.MarshalIndent(chats, "", "  ")
 	os.WriteFile("data/datachat.json", data, 0644)
 
-	c.JSON(http.StatusCreated, gin.H{"chat_id": newChatID})
+	c.JSON(http.StatusCreated, gin.H{"chat_id": newChatID, "message": newMessage})
 }
 
 // getChat returns all chats for the currently logged-in user
@@ -176,6 +215,77 @@ func getChat(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"chats": userChats})
+}
+
+// sendMessage handles sending a message to a chat
+func sendMessage(c *gin.Context) {
+	// Get user ID from JWT token
+	myIDAny, exist := c.Get("userID")
+	if !exist {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "ID Doesnt exist"})
+		return
+	}
+	myID := myIDAny.(string)
+
+	// Get chat ID from URL parameter
+	chatID := c.Param("chat_id")
+
+	// Bind request body
+	var req sendMessageInput
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	// Find the chat and update it
+	chatIndex := -1
+	for i, a := range chats {
+		if a.ChatID == chatID {
+			chatIndex = i
+			break
+		}
+	}
+
+	if chatIndex == -1 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Chat not found"})
+		return
+	}
+
+	// Check if user is part of this chat
+	u := chats[chatIndex].UserID
+	if u[0] != myID && u[1] != myID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "You are not part of this chat"})
+		return
+	}
+
+	// Create new message with correct message ID
+	newMessageID := len(chats[chatIndex].Messages) + 1
+	newMessage := message{
+		MessageID: fmt.Sprintf("%d", newMessageID),
+		SenderID:  myID,
+		Content:   req.Content,
+		Timestamp: 0,
+	}
+
+	// Add message to chat (using index to modify the slice directly)
+	chats[chatIndex].Messages = append(chats[chatIndex].Messages, newMessage)
+
+	// Save to file
+	data, err := json.MarshalIndent(chats, "", "  ")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to marshal JSON"})
+		return
+	}
+
+	err = os.WriteFile("data/datachat.json", data, 0644)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to write file: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"success": true, "message": newMessage})
 }
 
 func handlerLogin(c *gin.Context) {
