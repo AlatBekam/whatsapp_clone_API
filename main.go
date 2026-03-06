@@ -28,11 +28,23 @@ type LoginRequest struct {
 	Password string `json:"password"`
 }
 
+type userByID struct {
+	ID	string `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
+	FollowedChannelsByID []string `json:"followed_channels_by_id"`
+}
+
 type channel struct {
 	ChannelId   string `json:"channel_id"`
 	ChannelName string `json:"channel_name"`
 	ChannelType string `json:"channel_type"`
 	Description string `json:"description"`
+}
+
+type LoginRequest struct {
+	Name     string `json:"name"`
+	Password string `json:"password"`
 }
 
 type createUserInput struct {
@@ -42,6 +54,7 @@ type createUserInput struct {
 	Password             string   `json:"password"`
 	FollowedChannelsByID []string `json:"followed_channels_by_id"`
 }
+
 type updateUser struct {
 	Name                 *string   `json:"name"`
 	Email                *string   `json:"email"`
@@ -55,8 +68,6 @@ type createChannelInput struct {
 	Description string `json:"description"`
 }
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 type message struct {
 	MessageID string `json:"message_id"`
 	SenderID  string `json:"sender_id"`
@@ -74,9 +85,6 @@ type chat struct {
 	Messages []message `json:"messages"`
 }
 
-=======
-=======
->>>>>>> Stashed changes
 type Massage struct {
 	SenderID string `json:"sender_id"`
 	Content string `json:"content"`
@@ -90,45 +98,66 @@ type ChatPage struct {
 	Chat []Massage `json:"chat"`
 }
 
+type updateUser struct {
+	Name                 *string   `json:"name"`
+	Email                *string   `json:"email"`
+	Password             *string   `json:"password"`
+	FollowedChannelsByID *[]string `json:"followed_channels_by_id"`
+}
 
-var chatPages []ChatPage
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+type status struct {
+	StatusID  string `json:"StatusID"`
+	UserID    string `json:"UserID"`
+	Content   string `json:"Content"`
+	CreatedAt string `json:"CreatedAt"`
+}
+
+type viewStatus struct {
+	ID       string `json:"id"`
+	StatusID string `json:"StatusID"`
+	ViewerID string `json:"ViewerID"`
+	ViewedAt string `json:"ViewedAt"`
+}
+
+type community struct {
+	CommunityID         string  `json:"community_id"`
+	CommunityName       string  `json:"community_name"`
+	Description         string  `json:"description"`
+	AnnouncementGroupID *string `json:"announcement_group_id"`
+}
+
+type group struct {
+	GroupID     string  `json:"group_id"`
+	GroupName   string  `json:"group_name"`
+	Description string  `json:"description"`
+	CommunityID *string `json:"community_id"`
+}
+
 var lastUserID int
 var lastChannelID int
+var lastStatuslID int
+var lastViewedStatus int
 var userJSON []byte
 var channelJSON []byte
+var statusJSON []byte
+var viewedStatusJSON []byte
 var users []user
 var channels []channel
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 var chats []chat
 var chatsJSON []byte
 var lastchatID int
-=======
-=======
->>>>>>> Stashed changes
 var chatJSON []byte
 var lastChatID int
-
->>>>>>> Stashed changes
+var statuses []status
+var viewedStatus []viewStatus
 
 func main() {
 
 	var err error
 	userJSON, err = os.ReadFile("data/users.json")
 	channelJSON, err = os.ReadFile("data/channels.json")
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-	chatsJSON, err := os.ReadFile("data/datachat.json")
-=======
-	chatJSON, err = os.ReadFile("data/datachat.json")
->>>>>>> Stashed changes
-=======
-	chatJSON, err = os.ReadFile("data/datachat.json")
->>>>>>> Stashed changes
+	statusJSON, err = os.ReadFile("data/status.json")
+	viewedStatusJSON, err = os.ReadFile("data/viewStatus.json")
 
 	// jika terjadi error saat membaca file users.json, maka program akan panic dan menampilkan pesan error. Hal ini dilakukan untuk memastikan bahwa program tidak melanjutkan eksekusi jika file tidak dapat dibaca, sehingga mencegah terjadinya kesalahan lebih lanjut yang mungkin terjadi akibat data yang tidak tersedia.
 	if err != nil {
@@ -138,46 +167,44 @@ func main() {
 	// json.Unmarshal() merupakan fungsi untuk mengkonversi data JSON menjadi struct atau slice dalam bahasa Go. Fungsi ini menerima dua parameter, yaitu data JSON yang akan dikonversi dan variabel yang akan menampung hasil konversi. Dalam kasus ini, kita mengkonversi data JSON yang dibaca dari file users.json menjadi slice of user dan menyimpannya dalam variabel users.
 	json.Unmarshal(userJSON, &users)
 	json.Unmarshal(channelJSON, &channels)
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 	json.Unmarshal(chatsJSON, &chats)
 	lastUserID = len(users)
 	lastChannelID = len(channels)
 	lastchatID = len(chats)
-=======
 	json.Unmarshal(chatJSON, &chatPages)
-	lastUserID = len(users)
-	lastChannelID = len(channels)
 	lastChatID = len(chatPages)
->>>>>>> Stashed changes
-=======
-	json.Unmarshal(chatJSON, &chatPages)
-	lastUserID = len(users)
-	lastChannelID = len(channels)
-	lastChatID = len(chatPages)
->>>>>>> Stashed changes
+	json.Unmarshal(statusJSON, &statuses)
+	json.Unmarshal(viewedStatusJSON, &viewedStatus)
+	lastStatuslID = len(statuses)
+	lastViewedStatus = len(viewedStatus)
 
 	router := gin.Default()
 	router.GET("api/public/users", getUser)
 	router.GET("api/public/users/:id", getUserByID)
+	router.GET("api/public/users/statuses", showStatus)
 	router.POST("api/public/channels", addChannel)
 	router.POST("api/public/login", handlerLogin)
 	router.POST("api/public/users", addUser)
 	// router.GET("api/public/chats", getChat)
+	// router.GET("api/public/channels", getChannel)
+
 
 	protected := router.Group("api/private")
 	protected.Use(middleware.JWTAuthMiddleware())
 	protected.GET("/channels", getChannel)
+	protected.GET("/users/statuses/", showViewedStatus)
 	protected.POST("/users", editUserByID)
 	protected.POST("/chats", addChat)
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 	protected.GET("/chats", getChat)
 	protected.POST("/chats/:chat_id/messages", sendMessage)
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+  protected.POST("/users/status", createdStatus)
+	protected.POST("/users/status/view", viewStatusbyID)
+	protected.POST("/community", createCommunity)
+	protected.GET("/community", getCommunity)
+	protected.DELETE("/community/:id", deleteCommunity)
+	protected.POST("/group", createGroup)
+	protected.POST("/community/add-group", addGroupToCommunity)
+	protected.PUT("/community/:id", updateCommunity)
 
 	router.Run(":8080")
 }
@@ -420,12 +447,13 @@ func getChannel(c *gin.Context) {
 
 	response := gin.H{"response": channels}
 
-	fmt.Println("===== RESPONSE =====")
-	fmt.Println(response)
-	fmt.Println("====================")
+	// fmt.Println("===== RESPONSE =====")
+	// fmt.Println(response)
+	// fmt.Println("====================")
 }
 
 func getUserByID(c *gin.Context) {
+	var req userByID
 	// c.Param() merupakan fungsi untuk mengambil parameter dari URL. Dalam kasus ini, kita mengambil parameter "id" yang didefinisikan dalam route "/users/:id". Parameter ini akan digunakan untuk mencari user dengan ID yang sesuai dalam slice users.
 	idParam := c.Param("id")
 	// strconv.Atoi() merupakan fungsi untuk mengkonversi string menjadi integer. Namun, dalam kasus ini, ID pada struct user didefinisikan sebagai string, sehingga tidak perlu melakukan konversi ke integer. Oleh karena itu, kita dapat langsung membandingkan idParam dengan ID pada struct user tanpa perlu menggunakan strconv.Atoi().
@@ -434,8 +462,12 @@ func getUserByID(c *gin.Context) {
 	// kita melakukan iterasi pada slice users untuk mencari user dengan ID yang sesuai dengan idParam. Jika ditemukan, maka kita mengirimkan response dengan status code http.StatusOK (200) dan data user yang ditemukan dalam format JSON. Jika tidak ditemukan, maka kita mengirimkan response dengan status code http.StatusNotFound (404) dan pesan "user not found".
 	// pada golang, _ digunakan untuk mengabaikan nilai yang dikembalikan oleh fungsi. Dalam kasus ini, kita mengabaikan nilai error yang dikembalikan oleh strconv.Atoi() karena kita tidak perlu melakukan konversi ke integer. Namun, jika kita ingin menangani error tersebut, kita dapat menggunakan variabel lain untuk menyimpan nilai error dan melakukan pengecekan sebelum melanjutkan eksekusi.
 	for _, a := range users {
-		if a.ID == idParam {
-			c.IndentedJSON(http.StatusOK, a)
+		if a.ID == 	idParam {
+			req.ID = a.ID
+			req.Email = a.Email
+			req.Name = a.Name
+			req.FollowedChannelsByID = a.FollowedChannelsByID
+			c.IndentedJSON(http.StatusOK, req)
 			return
 		}
 	}
@@ -503,10 +535,10 @@ func editUserByID(c *gin.Context) {
 		return
 	}
 
-	// c.JSON(http.StatusOK, gin.H{
-	// 	"success": true,
-	// 	"user": users,
-	// })
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"user": users,
+	})
 
 	// fmt.Println("User ID dari token:", IDParam)
 	// fmt.Println("Update name jadi:", *req.Name)
@@ -532,6 +564,14 @@ func generateChatID() string {
 func generateChannelID() string {
 	lastChannelID++
 	return fmt.Sprintf("ch_%d", lastChannelID)
+}
+func generateStatusID() string {
+	lastStatuslID++
+	return fmt.Sprintf("st_%d", lastStatuslID)
+}
+func generateViewStatus() string {
+	lastViewedStatus++
+	return fmt.Sprintf("view_%d", lastViewedStatus)
 }
 
 func addUser(c *gin.Context) {
@@ -654,7 +694,269 @@ func addChannel(c *gin.Context) {
 	}
 
 	channels = append(channels, newChannel)
-	c.IndentedJSON(http.StatusCreated, newChannel)
+	c.IndentedJSON(http.StatusCreated, gin.H{"success": true})
 	data, _ := json.MarshalIndent(channels, "", "  ")
 	os.WriteFile("data/channels.json", data, 0644)
+}
+
+func createdStatus(c *gin.Context) {
+	var req status
+
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	idParam, exist := c.Get("userID")
+	IDParam := idParam.(string)
+
+	if !exist {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "ID Doesnt exist"})
+	}
+
+	newStatus := status{
+		StatusID:  generateStatusID(),
+		UserID:    IDParam,
+		Content:   req.Content,
+		CreatedAt: time.Now().Local().String(),
+	}
+
+	statuses = append(statuses, newStatus)
+	c.IndentedJSON(http.StatusCreated, newStatus)
+	data, _ := json.MarshalIndent(statuses, "", "  ")
+	os.WriteFile("data/status.json", data, 0644)
+}
+
+func showStatus(c *gin.Context) {
+	c.IndentedJSON(http.StatusOK, statuses)
+}
+
+func showViewedStatus(c *gin.Context) {
+	c.IndentedJSON(http.StatusOK, viewedStatus)
+}
+
+func viewStatusbyID(c *gin.Context) {
+	var req viewStatus
+
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+	}
+
+	fmt.Println("===== REQUEST MASUK =====")
+	fmt.Println("StatusID:", req.StatusID)
+	fmt.Println("=========================")
+
+	idParam, exist := c.Get("userID")
+	IDParam := idParam.(string)
+
+	if !exist {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "ID Doesnt exist"})
+	}
+
+	newViewed := viewStatus{
+		ID: generateViewStatus(),
+		// StatusID harus dirubah menjadi menyesuaikan dengan status yang diklik
+		StatusID: req.StatusID,
+		ViewerID: IDParam,
+		ViewedAt: time.Now().Local().String(),
+	}
+
+	viewedStatus = append(viewedStatus, newViewed)
+	c.IndentedJSON(http.StatusCreated, newViewed)
+	data, _ := json.MarshalIndent(viewedStatus, "", "  ")
+	os.WriteFile("data/viewStatus.json", data, 0644)
+}
+
+func createCommunity(c *gin.Context) {
+
+	var newCommunity community
+
+	if err := c.BindJSON(&newCommunity); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	file, _ := os.ReadFile("data/community.json")
+
+	var communities []community
+	json.Unmarshal(file, &communities)
+
+	newCommunity.CommunityID = fmt.Sprintf("com_%d", len(communities)+1)
+
+	communities = append(communities, newCommunity)
+
+	data, _ := json.MarshalIndent(communities, "", " ")
+
+	os.WriteFile("data/community.json", data, 0644)
+
+	c.JSON(200, newCommunity)
+}
+
+func getCommunity(c *gin.Context) {
+
+	file, err := os.ReadFile("data/community.json")
+
+	if err != nil {
+		fmt.Println(err)
+		c.JSON(500, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	var communities []community
+
+	err = json.Unmarshal(file, &communities)
+
+	if err != nil {
+		fmt.Println(err)
+		c.JSON(500, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(200, communities)
+}
+
+func createGroup(c *gin.Context) {
+
+	var newGroup group
+
+	if err := c.BindJSON(&newGroup); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	file, _ := os.ReadFile("data/group.json")
+
+	var groups []group
+	json.Unmarshal(file, &groups)
+
+	newGroup.GroupID = fmt.Sprintf("grp_%d", len(groups)+1)
+
+	groups = append(groups, newGroup)
+
+	data, _ := json.MarshalIndent(groups, "", " ")
+
+	os.WriteFile("group.json", data, 0644)
+
+	c.JSON(200, newGroup)
+}
+
+func addGroupToCommunity(c *gin.Context) {
+
+	type Request struct {
+		GroupID     string `json:"group_id"`
+		CommunityID string `json:"community_id"`
+	}
+
+	var req Request
+
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	file, _ := os.ReadFile("data/group.json")
+
+	var groups []group
+	json.Unmarshal(file, &groups)
+
+	for i := range groups {
+		if groups[i].GroupID == req.GroupID {
+			groups[i].CommunityID = &req.CommunityID
+		}
+	}
+
+	data, _ := json.MarshalIndent(groups, "", " ")
+	os.WriteFile("group.json", data, 0644)
+
+	c.JSON(200, gin.H{"message": "group added to community"})
+}
+
+func deleteCommunity(c *gin.Context) {
+
+	id := c.Param("id")
+
+	file, _ := os.ReadFile("data/community.json")
+
+	var communities []community
+	json.Unmarshal(file, &communities)
+
+	var updated []community
+
+	for _, com := range communities {
+		if com.CommunityID != id {
+			updated = append(updated, com)
+		}
+	}
+
+	data, _ := json.MarshalIndent(updated, "", " ")
+	os.WriteFile("data/community.json", data, 0644)
+
+	c.JSON(200, gin.H{
+		"message": "community deleted",
+	})
+}
+
+func updateCommunity(c *gin.Context) {
+
+	id := c.Param("id")
+
+	type UpdateRequest struct {
+		CommunityName *string `json:"community_name"`
+		Description   *string `json:"description"`
+	}
+
+	var req UpdateRequest
+
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	file, err := os.ReadFile("data/community.json")
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	var communities []community
+	json.Unmarshal(file, &communities)
+
+	found := false
+
+	for i := range communities {
+
+		if communities[i].CommunityID == id {
+
+			if req.CommunityName != nil {
+				communities[i].CommunityName = *req.CommunityName
+			}
+
+			if req.Description != nil {
+				communities[i].Description = *req.Description
+			}
+
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		c.JSON(404, gin.H{"error": "community not found"})
+		return
+	}
+
+	data, _ := json.MarshalIndent(communities, "", " ")
+	os.WriteFile("data/community.json", data, 0644)
+
+	c.JSON(200, gin.H{
+		"message": "community updated",
+	})
 }
