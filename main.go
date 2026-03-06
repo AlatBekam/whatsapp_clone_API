@@ -23,6 +23,13 @@ type user struct {
 	FollowedChannelsByID []string `json:"followed_channels_by_id"`
 }
 
+type userByID struct {
+	ID	string `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
+	FollowedChannelsByID []string `json:"followed_channels_by_id"`
+}
+
 type channel struct {
 	ChannelId   string `json:"channel_id"`
 	ChannelName string `json:"channel_name"`
@@ -118,18 +125,22 @@ func main() {
 	lastUserID = len(users)
 	lastChannelID = len(channels)
 	lastStatuslID = len(statuses)
-	lastStatuslID = len(viewedStatus)
+	lastViewedStatus = len(viewedStatus)
 
 	router := gin.Default()
 	router.GET("api/public/users", getUser)
 	router.GET("api/public/users/:id", getUserByID)
+	router.GET("api/public/users/statuses", showStatus)
 	router.POST("api/public/channels", addChannel)
 	router.POST("api/public/login", handlerLogin)
 	router.POST("api/public/users", addUser)
+	// router.GET("api/public/channels", getChannel)
+
 
 	protected := router.Group("api/private")
 	protected.Use(middleware.JWTAuthMiddleware())
 	protected.GET("/channels", getChannel)
+	protected.GET("/users/statuses/", showViewedStatus)
 	protected.POST("/users", editUserByID)
 	protected.POST("/users/status", createdStatus)
 	protected.POST("/users/status/view", viewStatusbyID)
@@ -213,12 +224,13 @@ func getChannel(c *gin.Context) {
 
 	response := gin.H{"response": channels}
 
-	fmt.Println("===== RESPONSE =====")
-	fmt.Println(response)
-	fmt.Println("====================")
+	// fmt.Println("===== RESPONSE =====")
+	// fmt.Println(response)
+	// fmt.Println("====================")
 }
 
 func getUserByID(c *gin.Context) {
+	var req userByID
 	// c.Param() merupakan fungsi untuk mengambil parameter dari URL. Dalam kasus ini, kita mengambil parameter "id" yang didefinisikan dalam route "/users/:id". Parameter ini akan digunakan untuk mencari user dengan ID yang sesuai dalam slice users.
 	idParam := c.Param("id")
 	// strconv.Atoi() merupakan fungsi untuk mengkonversi string menjadi integer. Namun, dalam kasus ini, ID pada struct user didefinisikan sebagai string, sehingga tidak perlu melakukan konversi ke integer. Oleh karena itu, kita dapat langsung membandingkan idParam dengan ID pada struct user tanpa perlu menggunakan strconv.Atoi().
@@ -227,8 +239,12 @@ func getUserByID(c *gin.Context) {
 	// kita melakukan iterasi pada slice users untuk mencari user dengan ID yang sesuai dengan idParam. Jika ditemukan, maka kita mengirimkan response dengan status code http.StatusOK (200) dan data user yang ditemukan dalam format JSON. Jika tidak ditemukan, maka kita mengirimkan response dengan status code http.StatusNotFound (404) dan pesan "user not found".
 	// pada golang, _ digunakan untuk mengabaikan nilai yang dikembalikan oleh fungsi. Dalam kasus ini, kita mengabaikan nilai error yang dikembalikan oleh strconv.Atoi() karena kita tidak perlu melakukan konversi ke integer. Namun, jika kita ingin menangani error tersebut, kita dapat menggunakan variabel lain untuk menyimpan nilai error dan melakukan pengecekan sebelum melanjutkan eksekusi.
 	for _, a := range users {
-		if a.ID == idParam {
-			c.IndentedJSON(http.StatusOK, a)
+		if a.ID == 	idParam {
+			req.ID = a.ID
+			req.Email = a.Email
+			req.Name = a.Name
+			req.FollowedChannelsByID = a.FollowedChannelsByID
+			c.IndentedJSON(http.StatusOK, req)
 			return
 		}
 	}
@@ -296,10 +312,10 @@ func editUserByID(c *gin.Context) {
 		return
 	}
 
-	// c.JSON(http.StatusOK, gin.H{
-	// 	"success": true,
-	// 	"user": users,
-	// })
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"user": users,
+	})
 
 	// fmt.Println("User ID dari token:", IDParam)
 	// fmt.Println("Update name jadi:", *req.Name)
@@ -426,6 +442,14 @@ func createdStatus(c *gin.Context) {
 	os.WriteFile("data/status.json", data, 0644)
 }
 
+func showStatus(c *gin.Context) {
+	c.IndentedJSON(http.StatusOK, statuses)
+}
+
+func showViewedStatus(c *gin.Context) {
+	c.IndentedJSON(http.StatusOK, viewedStatus)
+}
+
 func viewStatusbyID(c *gin.Context) {
 	var req viewStatus
 
@@ -434,6 +458,10 @@ func viewStatusbyID(c *gin.Context) {
 			"error": err.Error(),
 		})
 	}
+
+	fmt.Println("===== REQUEST MASUK =====")
+	fmt.Println("StatusID:", req.StatusID)
+	fmt.Println("=========================")
 
 	idParam, exist := c.Get("userID")
 	IDParam := idParam.(string)

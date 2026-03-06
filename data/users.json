@@ -4,49 +4,70 @@
     "name": "RizalKece",
     "email": "alice.johnson@example.com",
     "password": "Alice123",
-    "followed_channels_by_id": ["ch_1", "ch_3", "ch_5"]
+    "followed_channels_by_id": [
+      "ch_1"
+    ]
   },
   {
     "id": "2",
     "name": "Bob Smith",
     "email": "bob.smith@example.com",
     "password": "BobSmith12",
-    "followed_channels_by_id": ["ch_2", "ch_6"]
+    "followed_channels_by_id": [
+      "ch_2",
+      "ch_6"
+    ]
   },
   {
     "id": "3",
     "name": "Carol Williams",
     "email": "carol.williams@example.com",
     "password": "Carrol321",
-    "followed_channels_by_id": ["ch_4", "ch_5"]
+    "followed_channels_by_id": [
+      "ch_4",
+      "ch_5"
+    ]
   },
   {
     "id": "4",
     "name": "David Brown",
     "email": "david.brown@example.com",
     "password": "David321",
-    "followed_channels_by_id": ["ch_1", "ch_6"]
+    "followed_channels_by_id": [
+      "ch_1",
+      "ch_6"
+    ]
   },
   {
     "id": "5",
     "name": "Eve Davis",
     "email": "eve.davis@example.com",
     "password": "EveJhon",
-    "followed_channels_by_id": ["ch_3", "ch_4"]
+    "followed_channels_by_id": [
+      "ch_3",
+      "ch_4"
+    ]
   },
   {
     "id": "6",
     "name": "Frank Miller",
     "email": "frank.miller@example.com",
     "password": "FrankMiller",
-    "followed_channels_by_id": ["ch_2", "ch_3"]
+    "followed_channels_by_id": [
+      "ch_2",
+      "ch_3"
+    ]
   },
   {
     "id": "7",
     "name": "Grace Taylor",
     "email": "grace.taylor@example.com",
     "password": "Grace123",
-    "followed_channels_by_id": ["ch_1", "ch_4", "ch_5"]
+    "followed_channels_by_id": [
+      "ch_1",
+      "ch_4",
+      "ch_5"
+    ]
   },
   {
     "id": "8",
