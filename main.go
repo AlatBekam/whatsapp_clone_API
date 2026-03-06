@@ -222,7 +222,7 @@ func getChannel(c *gin.Context) {
 
 	// fmt.Println("All Headers:", c.Request.Header)
 
-	response := gin.H{"response": channels}
+	// response := gin.H{"response": channels}
 
 	// fmt.Println("===== RESPONSE =====")
 	// fmt.Println(response)
@@ -407,7 +407,7 @@ func addChannel(c *gin.Context) {
 	}
 
 	channels = append(channels, newChannel)
-	c.IndentedJSON(http.StatusCreated, newChannel)
+	c.IndentedJSON(http.StatusCreated, gin.H{"success": true})
 	data, _ := json.MarshalIndent(channels, "", "  ")
 	os.WriteFile("data/channels.json", data, 0644)
 }
