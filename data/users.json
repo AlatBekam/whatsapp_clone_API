@@ -82,5 +82,12 @@
     "email": "joko@gmail.com",
     "password": "joko123",
     "followed_channels_by_id": null
+  },
+  {
+    "id": "10",
+    "name": "rizal",
+    "email": "gnteng@sekali.com",
+    "password": "rizala",
+    "followed_channels_by_id": null
   }
 ]
