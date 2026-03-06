@@ -56,6 +56,7 @@ type createChannelInput struct {
 }
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 type message struct {
 	MessageID string `json:"message_id"`
 	SenderID  string `json:"sender_id"`
@@ -74,6 +75,8 @@ type chat struct {
 }
 
 =======
+=======
+>>>>>>> Stashed changes
 type Massage struct {
 	SenderID string `json:"sender_id"`
 	Content string `json:"content"`
@@ -89,6 +92,9 @@ type ChatPage struct {
 
 
 var chatPages []ChatPage
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 var lastUserID int
 var lastChannelID int
@@ -97,10 +103,13 @@ var channelJSON []byte
 var users []user
 var channels []channel
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 var chats []chat
 var chatsJSON []byte
 var lastchatID int
 =======
+=======
+>>>>>>> Stashed changes
 var chatJSON []byte
 var lastChatID int
 
@@ -112,7 +121,11 @@ func main() {
 	userJSON, err = os.ReadFile("data/users.json")
 	channelJSON, err = os.ReadFile("data/channels.json")
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 	chatsJSON, err := os.ReadFile("data/datachat.json")
+=======
+	chatJSON, err = os.ReadFile("data/datachat.json")
+>>>>>>> Stashed changes
 =======
 	chatJSON, err = os.ReadFile("data/datachat.json")
 >>>>>>> Stashed changes
@@ -126,10 +139,17 @@ func main() {
 	json.Unmarshal(userJSON, &users)
 	json.Unmarshal(channelJSON, &channels)
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 	json.Unmarshal(chatsJSON, &chats)
 	lastUserID = len(users)
 	lastChannelID = len(channels)
 	lastchatID = len(chats)
+=======
+	json.Unmarshal(chatJSON, &chatPages)
+	lastUserID = len(users)
+	lastChannelID = len(channels)
+	lastChatID = len(chatPages)
+>>>>>>> Stashed changes
 =======
 	json.Unmarshal(chatJSON, &chatPages)
 	lastUserID = len(users)
@@ -151,8 +171,11 @@ func main() {
 	protected.POST("/users", editUserByID)
 	protected.POST("/chats", addChat)
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 	protected.GET("/chats", getChat)
 	protected.POST("/chats/:chat_id/messages", sendMessage)
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 

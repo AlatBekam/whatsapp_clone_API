@@ -1,5 +1,6 @@
 [
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   {
     "chat_id": "1",
     "user_id": [
@@ -122,6 +123,8 @@
     ]
   }
 =======
+=======
+>>>>>>> Stashed changes
     {
         "chat_id": "1",
         "user_id": [1, 2],
@@ -138,5 +141,8 @@
             }
         ]
     }
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 ]
