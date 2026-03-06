@@ -85,10 +85,16 @@
         "content": "halo",
         "timestamp": 0
       },
-      { 
+      {
         "message_id": "7",
         "sender_id": "1",
         "content": "halo, apa kabar?",
+        "timestamp": 0
+      },
+      {
+        "message_id": "8",
+        "sender_id": "10",
+        "content": "akukece",
         "timestamp": 0
       }
     ]
