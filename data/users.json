@@ -4,7 +4,9 @@
     "name": "RizalKece",
     "email": "alice.johnson@example.com",
     "password": "Alice123",
-    "followed_channels_by_id": []
+    "followed_channels_by_id": [
+      "ch_1"
+    ]
   },
   {
     "id": "2",

@@ -205,11 +205,11 @@ func getChannel(c *gin.Context) {
 
 	// fmt.Println("All Headers:", c.Request.Header)
 
-	response := gin.H{ "response": channels,}
+	// response := gin.H{ "response": channels,}
 
-	fmt.Println("===== RESPONSE =====")
-	fmt.Println(response)
-	fmt.Println("====================")
+	// fmt.Println("===== RESPONSE =====")
+	// fmt.Println(response)
+	// fmt.Println("====================")
 }
 
 func getUserByID(c *gin.Context) {
