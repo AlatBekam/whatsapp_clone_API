@@ -1,12 +1,7 @@
 [
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
   {
     "chat_id": "1",
-    "user_id": [
-      "1",
-      "2"
-    ],
+    "user_id": ["1", "2"],
     "messages": [
       {
         "message_id": "1",
@@ -30,26 +25,17 @@
   },
   {
     "chat_id": "chat_2",
-    "user_id": [
-      "10",
-      "0"
-    ],
+    "user_id": ["10", "0"],
     "messages": []
   },
   {
     "chat_id": "chat_3",
-    "user_id": [
-      "1",
-      "1"
-    ],
+    "user_id": ["1", "1"],
     "messages": []
   },
   {
     "chat_id": "chat_4",
-    "user_id": [
-      "10",
-      "1"
-    ],
+    "user_id": ["10", "1"],
     "messages": [
       {
         "message_id": "1",
@@ -103,10 +89,7 @@
   },
   {
     "chat_id": "chat_5",
-    "user_id": [
-      "10",
-      "7"
-    ],
+    "user_id": ["10", "7"],
     "messages": [
       {
         "message_id": "1",
@@ -121,28 +104,21 @@
         "timestamp": 0
       }
     ]
+  },
+  {
+    "chat_id": "1",
+    "user_id": [1, 2],
+    "chat": [
+      {
+        "sender_id": 1,
+        "message": "Hello, how are you?",
+        "timestamp": "2024-06-01T10:00:00Z"
+      },
+      {
+        "sender_id": 2,
+        "message": "I'm good, thanks! How about you?",
+        "timestamp": "2024-06-01T10:01:00Z"
+      }
+    ]
   }
-=======
-=======
->>>>>>> Stashed changes
-    {
-        "chat_id": "1",
-        "user_id": [1, 2],
-        "chat": [
-            {
-                "sender_id": 1,
-                "message": "Hello, how are you?",
-                "timestamp": "2024-06-01T10:00:00Z"
-            },
-            {
-                "sender_id": 2,
-                "message": "I'm good, thanks! How about you?",
-                "timestamp": "2024-06-01T10:01:00Z"
-            }
-        ]
-    }
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 ]

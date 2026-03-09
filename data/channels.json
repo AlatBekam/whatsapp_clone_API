@@ -46,5 +46,11 @@
     "channel_name": "Joko Otomotif",
     "channel_type": "Otomotif",
     "description": "Koleksi pribadi kendaraan Joko"
+  },
+  {
+    "channel_id": "ch_9",
+    "channel_name": "das",
+    "channel_type": "sdad",
+    "description": "asdas"
   }
 ]

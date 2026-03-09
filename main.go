@@ -42,24 +42,12 @@ type channel struct {
 	Description string `json:"description"`
 }
 
-type LoginRequest struct {
-	Name     string `json:"name"`
-	Password string `json:"password"`
-}
-
 type createUserInput struct {
 	// binding adalah tag yang digunakan untuk menentukan aturan validasi pada field struct saat melakukan binding data dari request body. Dalam kasus ini, kita menggunakan binding:"required" untuk menandai bahwa field Name pada struct createUserInput wajib diisi saat melakukan binding data JSON dari request body. Jika field Name tidak diisi atau kosong, maka proses binding akan gagal dan menghasilkan error. Dengan menggunakan tag binding:"required", kita dapat memastikan bahwa data yang diterima dari request body memiliki field Name yang valid dan tidak kosong sebelum melanjutkan ke proses selanjutnya.
 	Name                 string   `json:"name"`
 	Email                string   `json:"email"`
 	Password             string   `json:"password"`
 	FollowedChannelsByID []string `json:"followed_channels_by_id"`
-}
-
-type updateUser struct {
-	Name                 *string   `json:"name"`
-	Email                *string   `json:"email"`
-	Password             *string   `json:"password"`
-	FollowedChannelsByID *[]string `json:"followed_channels_by_id"`
 }
 
 type createChannelInput struct {
@@ -140,6 +128,7 @@ var lastViewedStatus int
 var userJSON []byte
 var channelJSON []byte
 var statusJSON []byte
+var chatPages []ChatPage
 var viewedStatusJSON []byte
 var users []user
 var channels []channel
@@ -197,7 +186,7 @@ func main() {
 	protected.POST("/chats", addChat)
 	protected.GET("/chats", getChat)
 	protected.POST("/chats/:chat_id/messages", sendMessage)
-  protected.POST("/users/status", createdStatus)
+  	protected.POST("/users/status", createdStatus)
 	protected.POST("/users/status/view", viewStatusbyID)
 	protected.POST("/community", createCommunity)
 	protected.GET("/community", getCommunity)
@@ -209,82 +198,6 @@ func main() {
 	router.Run(":8080")
 }
 
-func addChat(c *gin.Context) {
-	myIDAny, exist := c.Get("userID")
-	if !exist {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "ID Doesnt exist"})
-		return
-	}
-	myID := myIDAny.(string)
-
-	var req struct {
-		ReceiverID string `json:"receiver_id"`
-		Message    string `json:"message"`
-	}
-	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
-
-	// Validasi input
-	if req.ReceiverID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "receiver_id is required"})
-		return
-	}
-
-	if req.Message == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "message is required"})
-		return
-	}
-
-	// Cek apakah chat sudah ada
-	for i, a := range chats {
-		u := a.UserID
-		if (u[0] == myID && u[1] == req.ReceiverID) || (u[0] == req.ReceiverID && u[1] == myID) {
-			// Chat ditemukan, tambahkan pesan
-			newMessageID := len(chats[i].Messages) + 1
-			newMessage := message{
-				MessageID: fmt.Sprintf("%d", newMessageID),
-				SenderID:  myID,
-				Content:   req.Message,
-				Timestamp: 0,
-			}
-			chats[i].Messages = append(chats[i].Messages, newMessage)
-
-			// Simpan ke file
-			data, _ := json.MarshalIndent(chats, "", "  ")
-			os.WriteFile("data/datachat.json", data, 0644)
-
-			c.JSON(http.StatusOK, gin.H{"chat_id": a.ChatID, "message": newMessage})
-			return
-		}
-	}
-
-	// Jika chat tidak ditemukan, buat chat baru dengan pesan pertama
-	lastchatID++
-	newChatID := fmt.Sprintf("chat_%d", lastchatID)
-	newMessage := message{
-		MessageID: "1",
-		SenderID:  myID,
-		Content:   req.Message,
-		Timestamp: int(time.Now().Unix()),
-	}
-	newChat := chat{
-		ChatID:   newChatID,
-		UserID:   [2]string{myID, req.ReceiverID},
-		Messages: []message{newMessage},
-	}
-	chats = append(chats, newChat)
-
-	// Simpan ke file
-	data, _ := json.MarshalIndent(chats, "", "  ")
-	os.WriteFile("data/datachat.json", data, 0644)
-
-	c.JSON(http.StatusCreated, gin.H{"chat_id": newChatID, "message": newMessage})
-}
-
 // getChat returns all chats for the currently logged-in user
 func getChat(c *gin.Context) {
 	myIDAny, exist := c.Get("userID")
@@ -294,12 +207,27 @@ func getChat(c *gin.Context) {
 	}
 	myID := myIDAny.(string)
 
+	file, err := os.ReadFile("data/datachat.json")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read file"})
+		return
+	}
+
+	var allChats []map[string]interface{}
+	if err := json.Unmarshal(file, &allChats); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse data: " + err.Error()})
+		return
+	}
+
 	// Find all chats that the user is part of
-	var userChats []chat
-	for _, a := range chats {
-		u := a.UserID
-		if u[0] == myID || u[1] == myID {
-			userChats = append(userChats, a)
+	userChats := make([]map[string]interface{}, 0)
+	for _, a := range allChats {
+		if u, ok := a["user_id"].([]interface{}); ok && len(u) >= 2 {
+			u0 := fmt.Sprintf("%v", u[0])
+			u1 := fmt.Sprintf("%v", u[1])
+			if u0 == myID || u1 == myID {
+				userChats = append(userChats, a)
+			}
 		}
 	}
 
@@ -445,7 +373,6 @@ func getChannel(c *gin.Context) {
 
 	// fmt.Println("All Headers:", c.Request.Header)
 
-	response := gin.H{"response": channels}
 
 	// fmt.Println("===== RESPONSE =====")
 	// fmt.Println(response)
