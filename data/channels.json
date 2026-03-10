@@ -7,50 +7,14 @@
   },
   {
     "channel_id": "ch_2",
-    "channel_name": "Movie Mania",
-    "channel_type": "Entertainment",
-    "description": "Discussions about latest movies, trailers, and cinema reviews"
+    "channel_name": "asd",
+    "channel_type": "asd",
+    "description": "asd"
   },
   {
     "channel_id": "ch_3",
-    "channel_name": "Tech Galaxy",
-    "channel_type": "Technology",
-    "description": "Breaking tech news, gadget reviews, and software development tips"
-  },
-  {
-    "channel_id": "ch_4",
-    "channel_name": "Music Studio",
-    "channel_type": "Music",
-    "description": "Share and discuss your favorite songs, artists, and playlists"
-  },
-  {
-    "channel_id": "ch_5",
-    "channel_name": "Wellness Hub",
-    "channel_type": "Health",
-    "description": "Tips on fitness, nutrition, mental health, and wellness practices"
-  },
-  {
-    "channel_id": "ch_6",
-    "channel_name": "Gaming Zone",
-    "channel_type": "Gaming",
-    "description": "Join gamers worldwide for game discussions, reviews, and streaming"
-  },
-  {
-    "channel_id": "ch_7",
-    "channel_name": "Joko Otomotif",
-    "channel_type": "Otomotif",
-    "description": "Koleksi pribadi kendaraan Joko"
-  },
-  {
-    "channel_id": "ch_8",
-    "channel_name": "Joko Otomotif",
-    "channel_type": "Otomotif",
-    "description": "Koleksi pribadi kendaraan Joko"
-  },
-  {
-    "channel_id": "ch_9",
-    "channel_name": "das",
-    "channel_type": "sdad",
-    "description": "asdas"
+    "channel_name": "dsd",
+    "channel_type": "dsd",
+    "description": "sdsd"
   }
 ]

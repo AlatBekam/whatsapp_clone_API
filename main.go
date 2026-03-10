@@ -183,17 +183,18 @@ func main() {
 	protected.GET("/channels", getChannel)
 	protected.GET("/users/statuses/", showViewedStatus)
 	protected.POST("/users", editUserByID)
-	protected.POST("/chats", addChat)
-	protected.GET("/chats", getChat)
-	protected.POST("/chats/:chat_id/messages", sendMessage)
   	protected.POST("/users/status", createdStatus)
 	protected.POST("/users/status/view", viewStatusbyID)
+	
 	protected.POST("/community", createCommunity)
 	protected.GET("/community", getCommunity)
 	protected.DELETE("/community/:id", deleteCommunity)
 	protected.POST("/group", createGroup)
 	protected.POST("/community/add-group", addGroupToCommunity)
 	protected.PUT("/community/:id", updateCommunity)
+	protected.POST("/chats", addChat)
+	protected.GET("/chats", getChat)
+	protected.POST("/chats/:chat_id/messages", sendMessage)
 
 	router.Run(":8080")
 }
@@ -640,7 +641,7 @@ func createdStatus(c *gin.Context) {
 	IDParam := idParam.(string)
 
 	if !exist {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "ID Doesnt exist"})
+		c.JSON(http.StatusUnauthorized, gin.H{"success": false, "error": "ID Doesnt exist"})
 	}
 
 	newStatus := status{
@@ -651,7 +652,7 @@ func createdStatus(c *gin.Context) {
 	}
 
 	statuses = append(statuses, newStatus)
-	c.IndentedJSON(http.StatusCreated, newStatus)
+	c.IndentedJSON(http.StatusCreated, gin.H{"success": true})
 	data, _ := json.MarshalIndent(statuses, "", "  ")
 	os.WriteFile("data/status.json", data, 0644)
 }
