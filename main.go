@@ -182,7 +182,7 @@ func main() {
 	protected.Use(middleware.JWTAuthMiddleware())
 	protected.GET("/channels", getChannel)
 	protected.GET("/users/statuses/", showViewedStatus)
-	protected.POST("/users", editUserByID)
+	protected.PUT("/users", editUserByID)
   	protected.POST("/users/status", createdStatus)
 	protected.POST("/users/status/view", viewStatusbyID)
 	
