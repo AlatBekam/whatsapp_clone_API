@@ -4,11 +4,7 @@
     "name": "RizalKece",
     "email": "alice.johnson@example.com",
     "password": "Alice123",
-    "followed_channels_by_id": [
-      "ch_1",
-      "ch_3",
-      "ch_5"
-    ]
+    "followed_channels_by_id": []
   },
   {
     "id": "2",
@@ -87,9 +83,9 @@
   },
   {
     "id": "10",
-    "name": "apa",
-    "email": "terserah@gmail.com",
-    "password": "aja",
+    "name": "rizal",
+    "email": "gnteng@sekali.com",
+    "password": "rizala",
     "followed_channels_by_id": null
   }
 ]
