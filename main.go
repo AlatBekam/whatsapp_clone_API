@@ -58,6 +58,7 @@ type createChannelInput struct {
 type message struct {
 	MessageID string `json:"message_id"`
 	SenderID  string `json:"sender_id"`
+	Type      string `json:"type"`
 	Content   string `json:"content"`
 	Timestamp int    `json:"timestamp"`
 }
@@ -116,8 +117,38 @@ func main() {
 	protected.POST("/chats", addChat)
 	protected.GET("/chats", getChat)
 	protected.POST("/chats/:chat_id/messages", sendMessage)
+	protected.POST("/upload", uploadImage)
 
+	router.Static("/uploads", "./uploads")
 	router.Run(":8080")
+}
+
+func uploadImage(c *gin.Context) {
+	// ambil file dari request
+	file, err := c.FormFile("image")
+	if err != nil {
+		c.JSON(400, gin.H{"error": "file tidak ditemukan"})
+		return
+	}
+
+	// buat nama file unik
+	filename := fmt.Sprintf("%d_%s", time.Now().Unix(), file.Filename)
+
+	// simpan ke folder uploads
+	savePath := "./uploads/" + filename
+
+	err = c.SaveUploadedFile(file, savePath)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "gagal simpan file"})
+		return
+	}
+
+	// buat URL (akses dari frontend)
+	url := "http://10.0.2.2:8080/uploads/" + filename
+
+	c.JSON(200, gin.H{
+		"url": url,
+	})
 }
 
 func addChat(c *gin.Context) {
@@ -131,6 +162,7 @@ func addChat(c *gin.Context) {
 	var req struct {
 		ReceiverID string `json:"receiver_id"`
 		Message    string `json:"message"`
+		Type       string `json:"type"`
 	}
 	if err := c.BindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -159,8 +191,9 @@ func addChat(c *gin.Context) {
 			newMessage := message{
 				MessageID: fmt.Sprintf("%d", newMessageID),
 				SenderID:  myID,
+				Type:      req.Type,
 				Content:   req.Message,
-				Timestamp: 0,
+				Timestamp: int(time.Now().Unix()),
 			}
 			chats[i].Messages = append(chats[i].Messages, newMessage)
 
@@ -179,6 +212,7 @@ func addChat(c *gin.Context) {
 	newMessage := message{
 		MessageID: "1",
 		SenderID:  myID,
+		Type: 		req.Type,
 		Content:   req.Message,
 		Timestamp: int(time.Now().Unix()),
 	}
@@ -266,7 +300,7 @@ func sendMessage(c *gin.Context) {
 		MessageID: fmt.Sprintf("%d", newMessageID),
 		SenderID:  myID,
 		Content:   req.Content,
-		Timestamp: 0,
+		Timestamp: int(time.Now().Unix()),
 	}
 
 	// Add message to chat (using index to modify the slice directly)
