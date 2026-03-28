@@ -10,8 +10,6 @@ import (
 	JsonWebToken "whatsapp-clone-api/JWT"
 	"whatsapp-clone-api/middleware"
 
-	// github.com/gin-gonic/gin merupakan package yang digunakan untuk membuat web framework di Go. Package ini menyediakan berbagai fitur untuk memudahkan pengembangan aplikasi web, seperti routing, middleware, dan rendering template. Dalam kasus ini, kita menggunakan package gin untuk membuat API yang dapat menangani request dan response dalam format JSON.
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -380,11 +378,11 @@ func handlerLogin(c *gin.Context) {
 		return
 	}
 
-	// fmt.Println("===== REQUEST MASUK =====")
-	// fmt.Println("Nama:", req.Name)
-	// fmt.Println("Pass:", req.Password)
-	// fmt.Println("=========================")
-
+	fmt.Println("===== REQUEST MASUK =====")
+	fmt.Println("Nama:", req.Name)
+	fmt.Println("Pass:", req.Password)
+	fmt.Println("=========================")
+	
 	for _, a := range users {
 		if req.Name == a.Name && req.Password == a.Password {
 			userFind = true
@@ -392,6 +390,9 @@ func handlerLogin(c *gin.Context) {
 			break
 		}
 	}
+	fmt.Println("===== USERFIND =====")
+	fmt.Println("userFind:", userFind)
+	fmt.Println("=========================")
 
 	if !userFind {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid User or Password"})
@@ -404,7 +405,7 @@ func handlerLogin(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"success": true, "token": token})
+	c.JSON(http.StatusOK, gin.H{"success": true, "token": token, "response-message": "Selamat Kembali, " + req.Name })
 
 	// 	response := gin.H{
 	// 	"success": true,
@@ -432,6 +433,7 @@ func getUser(c *gin.Context) {
 }
 
 func getChannel(c *gin.Context) {
+	time.Sleep(2 * time.Second)
 	c.IndentedJSON(http.StatusOK, channels)
 
 	// fmt.Println("All Headers:", c.Request.Header)
@@ -461,7 +463,7 @@ func getUserByID(c *gin.Context) {
 			return
 		}
 	}
-	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "user not found"})
+	c.IndentedJSON(http.StatusNotFound, gin.H{"error": "user not found"})
 }
 
 func saveUserToJson(users []user) error {
@@ -480,6 +482,7 @@ func saveUserToJson(users []user) error {
 }
 
 func editUserByID(c *gin.Context) {
+	time.Sleep(2 * time.Second)
 	var req updateUser
 	found := false
 
@@ -528,6 +531,7 @@ func editUserByID(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"user": users,
+		"response-message": "Edit user success",
 	})
 
 	// fmt.Println("User ID dari token:", IDParam)
@@ -591,14 +595,14 @@ func addUser(c *gin.Context) {
 	// kita melakukan iterasi pada slice users untuk memeriksa apakah ada user dengan ID yang sama dengan newUser.ID. Jika ditemukan, maka kita mengirimkan response dengan status code http.StatusConflict (409) dan pesan "user with the same ID already exists". Jika tidak ditemukan, maka kita melanjutkan proses untuk menambahkan data user baru ke dalam slice users. Namun, dalam kasus ini, kita tidak perlu melakukan pengecekan untuk ID yang sama karena ID pada struct user dihasilkan secara otomatis menggunakan fungsi generateUserID(), sehingga tidak mungkin ada dua user dengan ID yang sama. Oleh karena itu, kita dapat langsung menambahkan data user baru ke dalam slice users tanpa perlu melakukan pengecekan untuk ID yang sama.
 	for _, a := range users {
 		if newUser.Email == a.Email {
-			c.IndentedJSON(http.StatusConflict, gin.H{"success": false, "message": "Email Already Use"})
+			c.IndentedJSON(http.StatusConflict, gin.H{"success": false, "error": "Email Already Use"})
 			return
 		}
 	}
 
 	// users = append(users, newUser) merupakan fungsi untuk menambahkan data user baru yang telah diterima dari request body ke dalam slice users. Fungsi append() digunakan untuk menambahkan elemen baru ke dalam slice. Dalam kasus ini, kita menambahkan newUser ke dalam slice users, sehingga data user baru tersebut akan disimpan dalam slice users dan dapat diakses melalui endpoint GET /users. Setelah menambahkan data user baru ke dalam slice users, kita mengirimkan response dengan status code http.StatusCreated (201) dan data user baru yang telah ditambahkan dalam format JSON.
 	users = append(users, newUser)
-	c.IndentedJSON(http.StatusCreated, gin.H{"success": true, "data": newUser})
+	c.IndentedJSON(http.StatusCreated, gin.H{"success": true, "response-message": "Add user success"})
 	// json.MarshalIndent() merupakan fungsi untuk mengkonversi data dalam format struct atau slice menjadi format JSON dengan indentasi yang rapi. Fungsi ini menerima tiga parameter, yaitu data yang akan dikonversi, prefix untuk setiap baris (dalam kasus ini kita menggunakan string kosong), dan indentasi yang digunakan untuk setiap level (dalam kasus ini kita menggunakan dua spasi). Fungsi ini akan mengembalikan data dalam format JSON yang telah diindentasikan dengan rapi. Dalam kasus ini, kita mengkonversi slice users yang telah diperbarui dengan data user baru menjadi format JSON dengan indentasi yang rapi dan menyimpannya dalam variabel data.
 	// perbedaan antara json.Marshal() dan json.MarshalIndent() adalah bahwa json.Marshal() akan menghasilkan output JSON dalam format yang lebih ringkas tanpa indentasi, sedangkan json.MarshalIndent() akan menghasilkan output JSON dengan indentasi yang rapi untuk meningkatkan keterbacaan. Dalam kasus ini, kita menggunakan json.MarshalIndent() untuk menghasilkan output JSON yang lebih mudah dibaca saat menyimpan data ke dalam file users.json.
 	data, _ := json.MarshalIndent(users, "", "  ")
@@ -606,25 +610,9 @@ func addUser(c *gin.Context) {
 	os.WriteFile("data/users.json", data, 0644)
 }
 
-// func getMyId(c *gin.Context) {
-// 	idParam, exist := c.Get("id")
-// 	if (!exist) {
-// 		c.IndentedJSON(http.StatusNotFound, gin.H{"error": "User not found"})
-// 	}
-// 	IDParam := idParam.(string)
-// 	c.IndentedJSON(http.StatusOK, gin.H{"user_id": IDParam})
-// }
-
-// func getID(c *gin.Context) {
-// 	idParam, exist := c.Get("id")
-// 	if (!exist) {
-// 		c.IndentedJSON(http.StatusNotFound, gin.H{"error": "User not found"})
-// 	}
-// 	IDParam := idParam.(string)
-// 	c.IndentedJSON(http.StatusOK, gin.H{"user_id": IDParam})
-// }
-
 func addChannel(c *gin.Context) {
+	time.Sleep(2 * time.Second)
+
 	var req createChannelInput
 
 	if err := c.BindJSON(&req); err != nil {
@@ -642,7 +630,7 @@ func addChannel(c *gin.Context) {
 	}
 
 	channels = append(channels, newChannel)
-	c.IndentedJSON(http.StatusCreated, gin.H{"success": true})
+	c.IndentedJSON(http.StatusCreated, gin.H{"success": true, "response-message":"Add channel success"})
 	data, _ := json.MarshalIndent(channels, "", "  ")
 	os.WriteFile("data/channels.json", data, 0644)
 }
@@ -672,20 +660,23 @@ func createdStatus(c *gin.Context) {
 	}
 
 	statuses = append(statuses, newStatus)
-	c.IndentedJSON(http.StatusCreated, gin.H{"success": true})
+	c.IndentedJSON(http.StatusCreated, gin.H{"success": true, "response-message":"Create status success"})
 	data, _ := json.MarshalIndent(statuses, "", "  ")
 	os.WriteFile("data/status.json", data, 0644)
 }
 
 func showStatus(c *gin.Context) {
+	time.Sleep(2 * time.Second)
 	c.IndentedJSON(http.StatusOK, statuses)
 }
 
 func showViewedStatus(c *gin.Context) {
+	time.Sleep(2 * time.Second)
 	c.IndentedJSON(http.StatusOK, viewedStatus)
 }
 
 func viewStatusbyID(c *gin.Context) {
+	time.Sleep(2 * time.Second)
 	var req viewStatus
 
 	if err := c.BindJSON(&req); err != nil {
