@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 
 	JsonWebToken "whatsapp-clone-api/JWT"
@@ -96,6 +97,7 @@ type status struct {
 	StatusID  string `json:"StatusID"`
 	UserID    string `json:"UserID"`
 	Content   string `json:"Content"`
+	ContentImage string `json:"ContentImage"`
 	CreatedAt string `json:"CreatedAt"`
 }
 
@@ -120,6 +122,11 @@ type group struct {
 	CommunityID *string `json:"community_id"`
 }
 
+type imagePaths struct {
+	paths string `json:"paths"`
+	// filename string `json:"fileName"`
+}
+
 var lastUserID int
 var lastChannelID int
 var lastStatuslID int
@@ -138,6 +145,7 @@ var chatJSON []byte
 var lastChatID int
 var statuses []status
 var viewedStatus []viewStatus
+var images []imagePaths
 
 func main() {
 
@@ -201,10 +209,13 @@ func main() {
 }
 
 func uploadImage(c *gin.Context) {
+	// var savePath string
+	var req imagePaths
+	
 	// ambil file dari request
 	file, err := c.FormFile("image")
 	if err != nil {
-		c.JSON(400, gin.H{"error": "file tidak ditemukan"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "file tidak ditemukan"})
 		return
 	}
 
@@ -212,18 +223,40 @@ func uploadImage(c *gin.Context) {
 	filename := fmt.Sprintf("%d_%s", time.Now().Unix(), file.Filename)
 
 	// simpan ke folder uploads
-	savePath := "./uploads/" + filename
+	// if req.paths == "story" {
+	// 	savePath = "./uploads/story" + filename
+	// } else {
+	// 	savePath = "./uploads/" + filename
+	// }
+
+	// if condition {
+		
+	// }
+
+	savePath := "./uploads/" + req.paths
+
+	// buat folder jika belum ada
+	err = os.MkdirAll(savePath, os.ModePerm)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to make folder"})
+		return
+	}
+
+	savePath = filepath.Join(savePath, filename)
+
+
 
 	err = c.SaveUploadedFile(file, savePath)
+	
 	if err != nil {
-		c.JSON(500, gin.H{"error": "gagal simpan file"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "gagal simpan file"})
 		return
 	}
 
 	// buat URL (akses dari frontend)
 	url := "http://10.0.2.2:8080/uploads/" + filename
 
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"url": url,
 	})
 }
@@ -690,6 +723,7 @@ func createdStatus(c *gin.Context) {
 		StatusID:  generateStatusID(),
 		UserID:    IDParam,
 		Content:   req.Content,
+		ContentImage: req.ContentImage,
 		CreatedAt: time.Now().Local().String(),
 	}
 
