@@ -1,98 +1,114 @@
 [
  {
-  "community_id": "com_2",
-  "community_name": "AI Developer",
-  "description": "Gas Belajar dan memperdalam AI",
-  "announcement_group_id": "grp_4"
- },
- {
   "community_id": "com_3",
+  "community_image_url": null,
   "community_name": "Web Dev",
-  "description": "Belajar Web",
+  "description": "Belajar Webc",
   "announcement_group_id": null
  },
  {
   "community_id": "com_4",
+  "community_image_url": null,
   "community_name": "Cyber Security",
   "description": "Belajar jadi Hacker",
   "announcement_group_id": null
  },
  {
   "community_id": "com_5",
+  "community_image_url": null,
   "community_name": "Hotama",
   "description": "Consultant IT",
   "announcement_group_id": null
  },
  {
   "community_id": "com_5",
+  "community_image_url": null,
   "community_name": "Siskom",
   "description": "Siskom UNTAN",
   "announcement_group_id": null
  },
  {
   "community_id": "com_6",
+  "community_image_url": null,
   "community_name": "test",
   "description": "est",
   "announcement_group_id": null
  },
  {
   "community_id": "com_7",
+  "community_image_url": null,
   "community_name": "test 2",
   "description": "testtt",
   "announcement_group_id": null
  },
  {
   "community_id": "com_8",
+  "community_image_url": null,
   "community_name": "",
   "description": "",
   "announcement_group_id": null
  },
  {
   "community_id": "com_9",
+  "community_image_url": null,
   "community_name": "set 1",
   "description": "test 2",
   "announcement_group_id": null
  },
  {
   "community_id": "com_10",
+  "community_image_url": null,
   "community_name": "testt",
   "description": "teeess",
   "announcement_group_id": null
  },
  {
   "community_id": "com_11",
+  "community_image_url": null,
   "community_name": "testt",
   "description": "tetetetetet",
   "announcement_group_id": null
  },
  {
   "community_id": "com_12",
+  "community_image_url": null,
   "community_name": "teswwww",
   "description": "wwwww",
   "announcement_group_id": null
  },
  {
   "community_id": "com_13",
+  "community_image_url": null,
   "community_name": "ttetetee",
   "description": "aeaweawew",
   "announcement_group_id": null
  },
  {
   "community_id": "com_14",
+  "community_image_url": null,
   "community_name": "test",
   "description": "estststst",
   "announcement_group_id": null
  },
  {
   "community_id": "com_15",
+  "community_image_url": null,
   "community_name": "qweqew",
   "description": "qweqweqwe",
   "announcement_group_id": null
  },
  {
   "community_id": "com_16",
+  "community_image_url": null,
   "community_name": "asdasda",
   "description": "dasd",
+  "announcement_group_id": null
+ },
+ {
+  "community_id": "com_17",
+  "community_image_url": null,
+  "community_name": "aca",
+  "description": "aac",
   "announcement_group_id": null
  }
 ]
