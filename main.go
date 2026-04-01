@@ -774,7 +774,7 @@ func viewStatusbyID(c *gin.Context) {
 }
 
 func createCommunity(c *gin.Context) {
-
+	time.Sleep(2 * time.Second)
 	var newCommunity community
 
 	if err := c.BindJSON(&newCommunity); err != nil {
@@ -799,7 +799,7 @@ func createCommunity(c *gin.Context) {
 }
 
 func getCommunity(c *gin.Context) {
-
+	time.Sleep(2 * time.Second)
 	file, err := os.ReadFile("data/community.json")
 
 	if err != nil {
@@ -826,7 +826,7 @@ func getCommunity(c *gin.Context) {
 }
 
 func createGroup(c *gin.Context) {
-
+	time.Sleep(2 * time.Second)
 	var newGroup group
 
 	if err := c.BindJSON(&newGroup); err != nil {
@@ -851,7 +851,7 @@ func createGroup(c *gin.Context) {
 }
 
 func addGroupToCommunity(c *gin.Context) {
-
+	time.Sleep(2 * time.Second)
 	type Request struct {
 		GroupID     string `json:"group_id"`
 		CommunityID string `json:"community_id"`
@@ -882,7 +882,7 @@ func addGroupToCommunity(c *gin.Context) {
 }
 
 func deleteCommunity(c *gin.Context) {
-
+	time.Sleep(2 * time.Second)
 	id := c.Param("id")
 
 	file, _ := os.ReadFile("data/community.json")
@@ -890,7 +890,7 @@ func deleteCommunity(c *gin.Context) {
 	var communities []community
 	json.Unmarshal(file, &communities)
 
-	var updated []community
+	updated := []community{}
 
 	for _, com := range communities {
 		if com.CommunityID != id {
@@ -907,7 +907,7 @@ func deleteCommunity(c *gin.Context) {
 }
 
 func updateCommunity(c *gin.Context) {
-
+	time.Sleep(2 * time.Second)
 	id := c.Param("id")
 
 	type UpdateRequest struct {
