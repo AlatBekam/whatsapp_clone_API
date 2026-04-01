@@ -79,13 +79,6 @@ type Massage struct {
 	Timestamp string `json:"timestamp"`
 }
 
-
-type ChatPage struct {
-	ChatID string `json:"chat_id"`
-	UserID [2]string `json:"user_id"`
-	Chat []Massage `json:"chat"`
-}
-
 type updateUser struct {
 	Name                 *string   `json:"name"`
 	Email                *string   `json:"email"`
@@ -134,15 +127,12 @@ var lastViewedStatus int
 var userJSON []byte
 var channelJSON []byte
 var statusJSON []byte
-var chatPages []ChatPage
 var viewedStatusJSON []byte
 var users []user
 var channels []channel
 var chats []chat
 var chatsJSON []byte
 var lastchatID int
-var chatJSON []byte
-var lastChatID int
 var statuses []status
 var viewedStatus []viewStatus
 var images []imagePaths
@@ -154,6 +144,7 @@ func main() {
 	channelJSON, err = os.ReadFile("data/channels.json")
 	statusJSON, err = os.ReadFile("data/status.json")
 	viewedStatusJSON, err = os.ReadFile("data/viewStatus.json")
+	chatsJSON, err = os.ReadFile("data/datachat.json")
 
 	// jika terjadi error saat membaca file users.json, maka program akan panic dan menampilkan pesan error. Hal ini dilakukan untuk memastikan bahwa program tidak melanjutkan eksekusi jika file tidak dapat dibaca, sehingga mencegah terjadinya kesalahan lebih lanjut yang mungkin terjadi akibat data yang tidak tersedia.
 	if err != nil {
@@ -167,8 +158,6 @@ func main() {
 	lastUserID = len(users)
 	lastChannelID = len(channels)
 	lastchatID = len(chats)
-	json.Unmarshal(chatJSON, &chatPages)
-	lastChatID = len(chatPages)
 	json.Unmarshal(statusJSON, &statuses)
 	json.Unmarshal(viewedStatusJSON, &viewedStatus)
 	lastStatuslID = len(statuses)
@@ -181,8 +170,6 @@ func main() {
 	router.POST("api/public/channels", addChannel)
 	router.POST("api/public/login", handlerLogin)
 	router.POST("api/public/users", addUser)
-	// router.GET("api/public/chats", getChat)
-	// router.GET("api/public/channels", getChannel)
 
 
 	protected := router.Group("api/private")
@@ -209,15 +196,14 @@ func main() {
 }
 
 func uploadImage(c *gin.Context) {
-	// var savePath string
-	var req imagePaths
-	
+	paths := c.PostForm("paths")
+
 	// ambil file dari request
 	file, err := c.FormFile("image")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "file tidak ditemukan"})
 		return
-	}
+	}	
 
 	// buat nama file unik
 	filename := fmt.Sprintf("%d_%s", time.Now().Unix(), file.Filename)
@@ -233,7 +219,7 @@ func uploadImage(c *gin.Context) {
 		
 	// }
 
-	savePath := "./uploads/" + req.paths
+	savePath := "./uploads/" + paths
 
 	// buat folder jika belum ada
 	err = os.MkdirAll(savePath, os.ModePerm)
@@ -244,8 +230,6 @@ func uploadImage(c *gin.Context) {
 
 	savePath = filepath.Join(savePath, filename)
 
-
-
 	err = c.SaveUploadedFile(file, savePath)
 	
 	if err != nil {
@@ -253,8 +237,13 @@ func uploadImage(c *gin.Context) {
 		return
 	}
 
+	fmt.Println("===== REQUEST MASUK =====")
+	fmt.Println("paths:", paths)
+	// fmt.Println("Pass:", req.Password)
+	fmt.Println("=========================")
+
 	// buat URL (akses dari frontend)
-	url := "http://10.0.2.2:8080/uploads/" + filename
+	url := "http://10.0.2.2:8080/uploads/" + paths + "/" + filename
 
 	c.JSON(http.StatusOK, gin.H{
 		"url": url,
@@ -617,10 +606,6 @@ func editUserByID(c *gin.Context) {
 func generateUserID() string {
 	lastUserID++
 	return fmt.Sprintf("%d", lastUserID)
-}
-func generateChatID() string {
-	lastChatID++
-	return fmt.Sprintf("%d", lastChatID)
 }
 func generateChannelID() string {
 	lastChannelID++
