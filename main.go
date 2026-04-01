@@ -28,9 +28,9 @@ type LoginRequest struct {
 }
 
 type userByID struct {
-	ID	string `json:"id"`
-	Name  string `json:"name"`
-	Email string `json:"email"`
+	ID                   string   `json:"id"`
+	Name                 string   `json:"name"`
+	Email                string   `json:"email"`
 	FollowedChannelsByID []string `json:"followed_channels_by_id"`
 }
 
@@ -74,8 +74,8 @@ type chat struct {
 }
 
 type Massage struct {
-	SenderID string `json:"sender_id"`
-	Content string `json:"content"`
+	SenderID  string `json:"sender_id"`
+	Content   string `json:"content"`
 	Timestamp string `json:"timestamp"`
 }
 
@@ -87,11 +87,11 @@ type updateUser struct {
 }
 
 type status struct {
-	StatusID  string `json:"StatusID"`
-	UserID    string `json:"UserID"`
-	Content   string `json:"Content"`
+	StatusID     string `json:"StatusID"`
+	UserID       string `json:"UserID"`
+	Content      string `json:"Content"`
 	ContentImage string `json:"ContentImage"`
-	CreatedAt string `json:"CreatedAt"`
+	CreatedAt    string `json:"CreatedAt"`
 }
 
 type viewStatus struct {
@@ -102,10 +102,11 @@ type viewStatus struct {
 }
 
 type community struct {
-	CommunityID         string  `json:"community_id"`
-	CommunityName       string  `json:"community_name"`
-	Description         string  `json:"description"`
-	AnnouncementGroupID *string `json:"announcement_group_id"`
+	CommunityID           string  `json:"community_id"`
+	CommunityProfileImage *string `json:"community_image_url"`
+	CommunityName         string  `json:"community_name"`
+	Description           string  `json:"description"`
+	AnnouncementGroupID   *string `json:"announcement_group_id"`
 }
 
 type group struct {
@@ -171,15 +172,14 @@ func main() {
 	router.POST("api/public/login", handlerLogin)
 	router.POST("api/public/users", addUser)
 
-
 	protected := router.Group("api/private")
 	protected.Use(middleware.JWTAuthMiddleware())
 	protected.GET("/channels", getChannel)
 	protected.GET("/users/statuses/", showViewedStatus)
 	protected.PUT("/users", editUserByID)
-  	protected.POST("/users/status", createdStatus)
+	protected.POST("/users/status", createdStatus)
 	protected.POST("/users/status/view", viewStatusbyID)
-	
+
 	protected.POST("/community", createCommunity)
 	protected.GET("/community", getCommunity)
 	protected.DELETE("/community/:id", deleteCommunity)
@@ -216,7 +216,7 @@ func uploadImage(c *gin.Context) {
 	// }
 
 	// if condition {
-		
+
 	// }
 
 	savePath := "./uploads/" + paths
@@ -231,7 +231,7 @@ func uploadImage(c *gin.Context) {
 	savePath = filepath.Join(savePath, filename)
 
 	err = c.SaveUploadedFile(file, savePath)
-	
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "gagal simpan file"})
 		return
@@ -311,7 +311,7 @@ func addChat(c *gin.Context) {
 	newMessage := message{
 		MessageID: "1",
 		SenderID:  myID,
-		Type: 		req.Type,
+		Type:      req.Type,
 		Content:   req.Message,
 		Timestamp: int(time.Now().Unix()),
 	}
@@ -421,7 +421,6 @@ func sendMessage(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"success": true, "message": newMessage})
 }
 
-
 func handlerLogin(c *gin.Context) {
 	var req LoginRequest
 	userFind := false
@@ -438,7 +437,7 @@ func handlerLogin(c *gin.Context) {
 	fmt.Println("Nama:", req.Name)
 	fmt.Println("Pass:", req.Password)
 	fmt.Println("=========================")
-	
+
 	for _, a := range users {
 		if req.Name == a.Name && req.Password == a.Password {
 			userFind = true
@@ -461,7 +460,7 @@ func handlerLogin(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"success": true, "token": token, "response-message": "Selamat Kembali, " + req.Name })
+	c.JSON(http.StatusOK, gin.H{"success": true, "token": token, "response-message": "Selamat Kembali, " + req.Name})
 
 	// 	response := gin.H{
 	// 	"success": true,
@@ -494,7 +493,6 @@ func getChannel(c *gin.Context) {
 
 	// fmt.Println("All Headers:", c.Request.Header)
 
-
 	// fmt.Println("===== RESPONSE =====")
 	// fmt.Println(response)
 	// fmt.Println("====================")
@@ -510,7 +508,7 @@ func getUserByID(c *gin.Context) {
 	// kita melakukan iterasi pada slice users untuk mencari user dengan ID yang sesuai dengan idParam. Jika ditemukan, maka kita mengirimkan response dengan status code http.StatusOK (200) dan data user yang ditemukan dalam format JSON. Jika tidak ditemukan, maka kita mengirimkan response dengan status code http.StatusNotFound (404) dan pesan "user not found".
 	// pada golang, _ digunakan untuk mengabaikan nilai yang dikembalikan oleh fungsi. Dalam kasus ini, kita mengabaikan nilai error yang dikembalikan oleh strconv.Atoi() karena kita tidak perlu melakukan konversi ke integer. Namun, jika kita ingin menangani error tersebut, kita dapat menggunakan variabel lain untuk menyimpan nilai error dan melakukan pengecekan sebelum melanjutkan eksekusi.
 	for _, a := range users {
-		if a.ID == 	idParam {
+		if a.ID == idParam {
 			req.ID = a.ID
 			req.Email = a.Email
 			req.Name = a.Name
@@ -585,8 +583,8 @@ func editUserByID(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"user": users,
+		"success":          true,
+		"user":             users,
 		"response-message": "Edit user success",
 	})
 
@@ -682,7 +680,7 @@ func addChannel(c *gin.Context) {
 	}
 
 	channels = append(channels, newChannel)
-	c.IndentedJSON(http.StatusCreated, gin.H{"success": true, "response-message":"Add channel success"})
+	c.IndentedJSON(http.StatusCreated, gin.H{"success": true, "response-message": "Add channel success"})
 	data, _ := json.MarshalIndent(channels, "", "  ")
 	os.WriteFile("data/channels.json", data, 0644)
 }
@@ -705,15 +703,15 @@ func createdStatus(c *gin.Context) {
 	}
 
 	newStatus := status{
-		StatusID:  generateStatusID(),
-		UserID:    IDParam,
-		Content:   req.Content,
+		StatusID:     generateStatusID(),
+		UserID:       IDParam,
+		Content:      req.Content,
 		ContentImage: req.ContentImage,
-		CreatedAt: time.Now().Local().String(),
+		CreatedAt:    time.Now().Local().String(),
 	}
 
 	statuses = append(statuses, newStatus)
-	c.IndentedJSON(http.StatusCreated, gin.H{"success": true, "response-message":"Create status success"})
+	c.IndentedJSON(http.StatusCreated, gin.H{"success": true, "response-message": "Create status success"})
 	data, _ := json.MarshalIndent(statuses, "", "  ")
 	os.WriteFile("data/status.json", data, 0644)
 }
@@ -764,7 +762,7 @@ func viewStatusbyID(c *gin.Context) {
 }
 
 func createCommunity(c *gin.Context) {
-
+	time.Sleep(2 * time.Second)
 	var newCommunity community
 
 	if err := c.BindJSON(&newCommunity); err != nil {
@@ -789,7 +787,7 @@ func createCommunity(c *gin.Context) {
 }
 
 func getCommunity(c *gin.Context) {
-
+	time.Sleep(2 * time.Second)
 	file, err := os.ReadFile("data/community.json")
 
 	if err != nil {
@@ -816,7 +814,7 @@ func getCommunity(c *gin.Context) {
 }
 
 func createGroup(c *gin.Context) {
-
+	time.Sleep(2 * time.Second)
 	var newGroup group
 
 	if err := c.BindJSON(&newGroup); err != nil {
@@ -841,7 +839,7 @@ func createGroup(c *gin.Context) {
 }
 
 func addGroupToCommunity(c *gin.Context) {
-
+	time.Sleep(2 * time.Second)
 	type Request struct {
 		GroupID     string `json:"group_id"`
 		CommunityID string `json:"community_id"`
@@ -872,7 +870,7 @@ func addGroupToCommunity(c *gin.Context) {
 }
 
 func deleteCommunity(c *gin.Context) {
-
+	time.Sleep(2 * time.Second)
 	id := c.Param("id")
 
 	file, _ := os.ReadFile("data/community.json")
@@ -880,7 +878,7 @@ func deleteCommunity(c *gin.Context) {
 	var communities []community
 	json.Unmarshal(file, &communities)
 
-	var updated []community
+	updated := []community{}
 
 	for _, com := range communities {
 		if com.CommunityID != id {
@@ -897,12 +895,13 @@ func deleteCommunity(c *gin.Context) {
 }
 
 func updateCommunity(c *gin.Context) {
-
+	time.Sleep(2 * time.Second)
 	id := c.Param("id")
 
 	type UpdateRequest struct {
-		CommunityName *string `json:"community_name"`
-		Description   *string `json:"description"`
+		CommunityProfileImage *string `json:"community_image_url"`
+		CommunityName         *string `json:"community_name"`
+		Description           *string `json:"description"`
 	}
 
 	var req UpdateRequest
@@ -926,6 +925,9 @@ func updateCommunity(c *gin.Context) {
 	for i := range communities {
 
 		if communities[i].CommunityID == id {
+			if req.CommunityProfileImage != nil {
+				communities[i].CommunityProfileImage = req.CommunityProfileImage
+			}
 
 			if req.CommunityName != nil {
 				communities[i].CommunityName = *req.CommunityName
