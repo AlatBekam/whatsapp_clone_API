@@ -12,5 +12,33 @@
   "community_name": "j,j",
   "description": "j,j, ",
   "announcement_group_id": null
+ },
+ {
+  "community_id": "com_3",
+  "community_image_url": "http://10.0.2.2:8080/uploads/community/1775318300_16b7c724-575a-4878-9754-566e87a17811907159245340555657.jpg",
+  "community_name": "xcss",
+  "description": "scs",
+  "announcement_group_id": null
+ },
+ {
+  "community_id": "com_4",
+  "community_image_url": null,
+  "community_name": "ad",
+  "description": "sada",
+  "announcement_group_id": null
+ },
+ {
+  "community_id": "com_5",
+  "community_image_url": null,
+  "community_name": "cs",
+  "description": "scs",
+  "announcement_group_id": null
+ },
+ {
+  "community_id": "com_6",
+  "community_image_url": null,
+  "community_name": "dcd",
+  "description": "dcddc",
+  "announcement_group_id": null
  }
 ]

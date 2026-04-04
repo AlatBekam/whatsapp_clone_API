@@ -203,7 +203,7 @@ func uploadImage(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "file tidak ditemukan"})
 		return
-	}	
+	}
 
 	// buat nama file unik
 	filename := fmt.Sprintf("%d_%s", time.Now().Unix(), file.Filename)
@@ -810,7 +810,50 @@ func getCommunity(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, communities)
+	// PAGINATION
+	page := 1
+	limit := 3
+
+	if pageQuery := c.Query("page"); pageQuery != "" {
+		fmt.Sscanf(pageQuery, "%d", &page)
+	}
+	if limitQuery := c.Query("limit"); limitQuery != "" {
+		fmt.Sscanf(limitQuery, "%d", &limit)
+	}
+
+	total := len(communities)
+
+	lastPage := 0
+	if total > 0 {
+		lastPage = (total + limit - 1) / limit
+	}
+
+	start := (page - 1) * limit
+	end := start + limit
+
+	if start >= total {
+		c.JSON(200, gin.H{
+			"data":         []community{},
+			"current_page": page,
+			"last_page":    lastPage,
+			"total":        total,
+		})
+		return
+	}
+
+	if end > total {
+		end = total
+	}
+
+	paginatedData := communities[start:end]
+
+	// c.JSON(200, communities)
+	c.JSON(200, gin.H{
+		"data":         paginatedData,
+		"current_page": page,
+		"last_page":    lastPage,
+		"total":        total,
+	})
 }
 
 func createGroup(c *gin.Context) {
