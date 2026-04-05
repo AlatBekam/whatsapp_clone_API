@@ -90,7 +90,7 @@ type status struct {
 	StatusID     string `json:"StatusID"`
 	UserID       string `json:"UserID"`
 	Content      string `json:"Content"`
-	ContentImage string `json:"ContentImage"`
+	ImagePaths 	 string `json:"ImagePaths"`
 	CreatedAt    string `json:"CreatedAt"`
 }
 
@@ -686,6 +686,7 @@ func addChannel(c *gin.Context) {
 }
 
 func createdStatus(c *gin.Context) {
+	time.Sleep(2 * time.Second)
 	var req status
 
 	if err := c.BindJSON(&req); err != nil {
@@ -706,7 +707,7 @@ func createdStatus(c *gin.Context) {
 		StatusID:     generateStatusID(),
 		UserID:       IDParam,
 		Content:      req.Content,
-		ContentImage: req.ContentImage,
+		ImagePaths:   req.ImagePaths,
 		CreatedAt:    time.Now().Local().String(),
 	}
 
