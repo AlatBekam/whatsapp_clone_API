@@ -94,3 +94,5 @@ go build
 ```
 
 3. The server will start on `http://localhost:8080` (or your configured port)
+
+sincerely, **AlatBekam**
